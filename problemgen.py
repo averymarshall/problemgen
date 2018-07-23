@@ -561,7 +561,6 @@ class Problem:
             return op
 
 
-
 class Generator:
     '''
     This object is designed to create Expressions representing different 
@@ -735,7 +734,36 @@ class Generator:
         Generates an Equation involving denoted variables to the order 
         specified.
 
-        fill this in
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        order_lhs       -   Order of the left hand side expression. 
+                            Default 1
+        order_rhs       -   Order of the right hand side expression.
+                            Default 0.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
         '''
         lhs_expr = self.gen_algebraic_expression(num_terms=num_lhs_terms,
                 types=types, symbols=symbols, order=order_lhs, coeff=lhs_coeff,
@@ -956,202 +984,173 @@ class Generator:
         # Returning expression
         return Expression(terms, reduced_terms, operations)
 
-    def add_linear(self, max_lowest_term=10, max_multiple=1, types='i',
+    def gen_linear(self, max_lowest_term=10, max_multiple=1, types='i',
             num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
             middle_sign='=', mixed_var=False, symbols='x',
             same_base_root=True, order_lhs=1, order_rhs=0):
         '''
         Adds a linear equation to the problem list.
-        '''
-        # loops until a problem that is not a duplicate is added
-        while(True):
-            assert order_lhs == 0 or order_lhs == 1
-            assert order_rhs == 0 or order_rhs == 1
-            equation = self.gen_equation(num_lhs_terms=num_lhs_terms, 
-                    num_rhs_terms=num_rhs_terms, types=types,
-                    symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs,
-                    lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
-                    mixed_var=mixed_var, max_lowest_term=max_lowest_term,
-                    middle_sign=middle_sign, max_multiple=max_multiple,
-                    same_base_root=same_base_root)
-            if self.add_problem(Problem(equation)):
-                return
 
-    def add_quadratic(self, max_lowest_term=10, factorable=True,
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        symbols         -   lists the variables that should be used as a string.
+                            Default 'x'.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
+
+        Returns Equation.
+        '''
+        assert order_lhs == 0 or order_lhs == 1
+        assert order_rhs == 0 or order_rhs == 1
+        equation = self.gen_equation(num_lhs_terms=num_lhs_terms, 
+                num_rhs_terms=num_rhs_terms, types=types,
+                symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs,
+                lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
+                mixed_var=mixed_var, max_lowest_term=max_lowest_term,
+                middle_sign=middle_sign, max_multiple=max_multiple,
+                same_base_root=same_base_root)
+        return equation
+
+    def gen_quadratic(self, max_lowest_term=10, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
-        Temporary, rework later
+        Generates a quadratic equation that can be factorable, unfactorable, or unsolvable.
+
+        Arguments:
+
+        max_lowest_term     -   The lowest coefficient that can appear in the problem.
+        factorable          -   bool determining if the equation should be factorable.
+        solvable            -   bool determining if the equation should be solvable.
+        leading_coeff       -   bool determining if a in ax^2 + bx + c should be 1 or not.
+                                False means a = 1.
+        middle_sign         -   Determines if this is an equation or an inequality.
+                                Appropriate arguments are '=', '>=', '<=', '<', '>', '!='.
+
+        Returns an Equation.
         '''
-        while(True):
-            if not factorable and solvable:
-                # This requires b^2 - 4ac to not be a perfect square
-                # Generating list of perfect squares
-                perfect_squares = [i**2 for i in range(max_lowest_term)]
-                # Generating list of non perfect squares
-                not_perfect = []
-                for i in range(max_lowest_term**2):
-                    if i not in perfect_squares:
-                        not_perfect.append(i)
-                # this is b^2 - 4ac
-                discrim = random.choice(not_perfect)
-                # this is b^2
-                b2 = random.choice(perfect_squares)
-                # this is -4ac
-                product = (discrim - b2) 
-                if product % 4 != 0:
-                    # discrim is not a perfect square, so multiplying it
-                    # by 4 can't make it a perfect square
-                    discrim *= 4
-                    # b2 is a perfect square, so by multiplying by 4 it will
-                    # stay a perfect square
-                    b2 *= 4
-                    product = (discrim - b2)
-                # Choosing two random divisors of -4ac to be a and c
-                ac_choices = divisors(product)
-                # Eliminating all divisors above max
-                for i in reversed(range(len(ac_choices))):
-                    if ac_choices[i] > max_lowest_term:
-                        del ac_choices[i]
-                a = random.choice(ac_choices)
-                if len(ac_choices) > 1:
-                    del ac_choices[ac_choices.index(a)]
-                # Rememeber product is -4ac, not just ac
-                c = int(random.choice(ac_choices) / (-4))
-                # divisors returns all positive numbers regardless of the 
-                # input. If product (-4ac) is negative, a and c must have same 
-                # signs.
-                if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
-                    c *= -1
-                # setting b
-                b = int(m.sqrt(b2))
-                # b can be positive or negative and a and c can either be
-                # both positive or both negative.
-                if random.randint(0, 1):
-                    c *= -1
-                    a *= -1
-                if random.randint(0, 1):
-                    b *= -1
-                equation = self.gen_equation(num_lhs_terms=3, order_lhs=2,
-                        lhs_coeff=[a, b, c], rhs_coeff=[0],
-                        max_lowest_term=max_lowest_term, middle_sign=middle_sign)
-            elif not solvable:
-                # This requires b^2 - 4ac < 0. We do a procedure similiar to
-                # the one above.
-                # Generating list of perfect squares
-                perfect_squares = [i**2 for i in range(max_lowest_term)]
-                # this is b^2
-                b2 = random.choice(perfect_squares)
-                # This is b^2 - 4ac
-                discrim = random.randint(-max_lowest_term**2, -1)
-                # this is -4ac
+        if not factorable and solvable:
+            # This requires b^2 - 4ac to not be a perfect square
+            # Generating list of perfect squares
+            perfect_squares = [i**2 for i in range(max_lowest_term)]
+            # Generating list of non perfect squares
+            not_perfect = []
+            for i in range(max_lowest_term**2):
+                if i not in perfect_squares:
+                    not_perfect.append(i)
+            # this is b^2 - 4ac
+            discrim = random.choice(not_perfect)
+            # this is b^2
+            b2 = random.choice(perfect_squares)
+            # this is -4ac
+            product = (discrim - b2) 
+            if product % 4 != 0:
+                # discrim is not a perfect square, so multiplying it
+                # by 4 can't make it a perfect square
+                discrim *= 4
+                # b2 is a perfect square, so by multiplying by 4 it will
+                # stay a perfect square
+                b2 *= 4
                 product = (discrim - b2)
-                # Choosing two random divisors of ac to be a and c
-                ac_choices = divisors(product)
-                # Eliminating all divisors above max
-                for i in reversed(range(len(ac_choices))):
-                    if ac_choices[i] > max_lowest_term:
-                        del ac_choices[i]
-                a = random.choice(ac_choices)
-                if len(ac_choices) > 1:
-                    del ac_choices[ac_choices.index(a)]
-                # Rememeber product is -4ac, not just ac
-                c = random.choice(ac_choices) / (-4)
-                # divisors returns all positive numbers regardless of the 
-                # input. If product (-4ac) is negative, a and c must have same 
-                # signs.
-                if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
-                    c *= -1
-                # setting b
-                b = m.sqrt(b2)
-                # b can be positive or negative and a and c can either be
-                # both positive or both negative.
-                if random.randint(0, 1):
-                    c *= -1
-                    a *= -1
-                if random.randint(0, 1):
-                    b *= -1
-                equation = self.gen_equation(num_lhs_terms=3, order_lhs=2,
-                        lhs_coeff=[a, b, c], rhs_coeff=[0],
-                        max_lowest_term=max_lowest_term, middle_sign=middle_sign)
-            else:
-                # Creating factorable quadratic
-                rhs = Expression([Term(0)], [Term(0)], ['',''])
-                lhs = self.gen_factorable_expression(order=2,
-                        max_lowest_term=max_lowest_term,
-                        leading_coeff=leading_coeff)
-                equation = Equation(lhs, rhs, middle_sign=middle_sign)
+            # Choosing two random divisors of -4ac to be a and c
+            ac_choices = divisors(product)
+            # Eliminating all divisors above max
+            for i in reversed(range(len(ac_choices))):
+                if ac_choices[i] > max_lowest_term:
+                    del ac_choices[i]
+            a = random.choice(ac_choices)
+            if len(ac_choices) > 1:
+                del ac_choices[ac_choices.index(a)]
+            # Rememeber product is -4ac, not just ac
+            c = int(random.choice(ac_choices) / (-4))
+            # divisors returns all positive numbers regardless of the 
+            # input. If product (-4ac) is negative, a and c must have same 
+            # signs.
+            if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
+                c *= -1
+            # setting b
+            b = int(m.sqrt(b2))
+            # b can be positive or negative and a and c can either be
+            # both positive or both negative.
+            if random.randint(0, 1):
+                c *= -1
+                a *= -1
+            if random.randint(0, 1):
+                b *= -1
+            equation = self.gen_equation(num_lhs_terms=3, order_lhs=2,
+                    lhs_coeff=[a, b, c], rhs_coeff=[0],
+                    max_lowest_term=max_lowest_term, middle_sign=middle_sign)
+        elif not solvable:
+            # This requires b^2 - 4ac < 0. We do a procedure similiar to
+            # the one above.
+            # Generating list of perfect squares
+            perfect_squares = [i**2 for i in range(max_lowest_term)]
+            # this is b^2
+            b2 = random.choice(perfect_squares)
+            # This is b^2 - 4ac
+            discrim = random.randint(-max_lowest_term**2, -1)
+            # this is -4ac
+            product = (discrim - b2)
+            # Choosing two random divisors of ac to be a and c
+            ac_choices = divisors(product)
+            # Eliminating all divisors above max
+            for i in reversed(range(len(ac_choices))):
+                if ac_choices[i] > max_lowest_term:
+                    del ac_choices[i]
+            a = random.choice(ac_choices)
+            if len(ac_choices) > 1:
+                del ac_choices[ac_choices.index(a)]
+            # Rememeber product is -4ac, not just ac
+            c = random.choice(ac_choices) / (-4)
+            # divisors returns all positive numbers regardless of the 
+            # input. If product (-4ac) is negative, a and c must have same 
+            # signs.
+            if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
+                c *= -1
+            # setting b
+            b = m.sqrt(b2)
+            # b can be positive or negative and a and c can either be
+            # both positive or both negative.
+            if random.randint(0, 1):
+                c *= -1
+                a *= -1
+            if random.randint(0, 1):
+                b *= -1
+            equation = self.gen_equation(num_lhs_terms=3, order_lhs=2,
+                    lhs_coeff=[a, b, c], rhs_coeff=[0],
+                    max_lowest_term=max_lowest_term, middle_sign=middle_sign)
+        else:
+            # Creating factorable quadratic
+            rhs = Expression([Term(0)], [Term(0)], ['',''])
+            lhs = self.gen_factorable_expression(order=2,
+                    max_lowest_term=max_lowest_term,
+                    leading_coeff=leading_coeff)
+            equation = Equation(lhs, rhs, middle_sign=middle_sign)
 
-            if self.add_problem(Problem(equation)):
-                return
+        return equation
 
-    def add_factorable(self, order=2, max_lowest_term=10,
-            symbols='x', leading_coeff=False):
-        '''
-        Adds an expression to the given order that is the
-        product of a series of binomial terms.
-
-        Arguments:
-        order       -   The order of the resulting polynomial.
-        symbols     -   a string containing the variables that
-                        should be used.
-        leading_coeff   -   Set to true to have a leading coeff
-                            for the binomial terms that is 
-                            greater than 0.
-
-        '''
-        while(True):
-            # Generating factorable expression
-            expr = self.gen_factorable_expression(order, max_lowest_term,
-                    symbols, leading_coeff)
-            # Adding problem to list
-            if self.add_problem(Problem(expr)):
-                return
-        
-
-    def add_numerical(self, num_terms=2, op='+-', types='i',
-            max_lowest_term=10, max_multiple=1, same_base_root=True):
-        '''
-        Generates an expression involving a chosen quantity of numbers and their
-        solution.
-
-        * Note : all radicals involved in the expression
-
-        Arguments:
-        num_terms   -   the number of terms in the Expression. Default 2.
-        op          -   a string expressing which operations should be used.
-                        String should only contain the characters +, -, *, ^, or
-                        /. For example, the string '+/' would indicate the 
-                        problem should include addition and/or division.
-                        Default '+-'.
-        types       -   The types of numbers that should be allowed to appear.
-                        This is expressed as a string, containing only the 
-                        characters 'i' (positive integers), 'r' (square roots),
-                        'f' (fractions).
-                        Default 'i'.
-        max_lowest_term
-                    -   the largest number that can appear in the reduced
-                        expression. (Of course, larger numbers may appear due
-                        to the operations being done.)
-        max_multiple
-                    -   the maximum multiplier used in the creation of fractions
-                        and radicals.
-        same_base_root
-                    -   bool determining if all radicals in the expression 
-                        should reduce to the same base root.
-
-        Returns nothing.
-        '''
-        while(True):
-            # Generating Expression
-            expression = self.gen_numerical_expression(num_terms, op, types, 
-                    max_lowest_term, max_multiple, same_base_root)
-            # Turning Expression into Problem
-            problem = Problem(expression)
-            # Adding problem to list of problems
-            if self.add_problem(problem):
-                return
-
-    def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
+    def gen_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
         '''
         Generates a Problem for converting fractions to decimals.
         Arguments:
@@ -1162,25 +1161,22 @@ class Generator:
         max_multiple
                     -   the maximum multiplier used in the creation of fractions
                         and radicals.
-        Returns nothing.
+        Returns Problem.
         '''
-        while(True):
-            # Generating Expression
-            expression = self.gen_numerical_expression(num_terms=1, types='f', 
-                    max_lowest_term=max_lowest_term, max_multiple=max_multiple)
-            # turning expression into problem
-            problem = Problem(expression)
-            # Getting decimal expression of the single fraction created
-            decimal = float(expression.reduced_terms[0].sympy_term)
-            # Formatting into Latex
-            solution = '%.5f' % decimal
-            # Substituting latex expression into problem
-            problem.latex_solution = solution
-            # Adding problem to problem list
-            if self.add_problem(problem):
-                return
+        # Generating Expression
+        expression = self.gen_numerical_expression(num_terms=1, types='f', 
+                max_lowest_term=max_lowest_term, max_multiple=max_multiple)
+        # turning expression into problem
+        problem = Problem(expression)
+        # Getting decimal expression of the single fraction created
+        decimal = float(expression.reduced_terms[0].sympy_term)
+        # Formatting into Latex
+        solution = '%.5f' % decimal
+        # Substituting latex expression into problem
+        problem.latex_solution = solution
+        return problem
 
-    def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
+    def gen_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
         '''
         Adds a Problem for converting decimals to fractions.
         Arguments:
@@ -1191,23 +1187,25 @@ class Generator:
         max_multiple
                     -   the maximum multiplier used in the creation of fractions
                         and radicals.
-        Returns nothing.
+        Returns Problem.
         '''
-        while(True):
-            # Generating Expression
-            expression = self.gen_numerical_expression(num_terms=1, types='f', 
-                    max_lowest_term=max_lowest_term, max_multiple=max_multiple)
-            # turning expression into problem
-            problem = Problem(expression)
-            # Getting decimal expression of the single fraction created
-            decimal = float(expression.reduced_terms[0].sympy_term)
-            # Formatting into Latex
-            question = '%.5f' % decimal
-            # Substituting latex expression into problem
-            problem.latex_question = question 
-            # Adding problem to problem list
-            if self.add_problem(problem):
-                return
+        # Generating Expression
+        expression = self.gen_numerical_expression(num_terms=1, types='f', 
+                max_lowest_term=max_lowest_term, max_multiple=max_multiple)
+        # turning expression into problem
+        problem = Problem(expression)
+        # Getting decimal expression of the single fraction created
+        decimal = float(expression.reduced_terms[0].sympy_term)
+        # Formatting into Latex
+        question = '%.5f' % decimal
+        # Substituting latex expression into problem
+        problem.latex_question = question 
+
+        return problem
+
+# Add problem container with all of the add methods and a problem list
+# have worksheet be a child class
+
 
 
 # Latex template
