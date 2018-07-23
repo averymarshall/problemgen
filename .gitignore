@@ -1,0 +1,8 @@
+# Latex stuff
+*.aux
+*.log
+# Python stuff
+*.pyc
+# Output directories
+worksheets/
+tex/
