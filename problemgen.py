@@ -1205,6 +1205,9 @@ class Generator:
 
 # Add problem container with all of the add methods and a problem list
 # have worksheet be a child class
+class ProblemContainer:
+    '''
+    Class designed to add and maintain a list of problems.
 
 
 
