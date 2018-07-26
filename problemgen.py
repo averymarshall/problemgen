@@ -547,16 +547,16 @@ class Problem:
         latex equivalent. Returns the conversion or the input string (if it
         didn't satisfy the input parameters).
         '''
-        if op is '*':
-            return '\\cdot'
-        elif op is '/':
-            return '\\div'
-        elif op is '>=':
-            return '\\geq'
-        elif op is '<=':
-            return '\\leq'
-        elif op is '!=':
-            return '\\neq'
+        if op == '*':
+            return '\\cdot '
+        elif op == '/':
+            return '\\div '
+        elif op == '>=':
+            return '\\geq '
+        elif op == '<=':
+            return '\\leq '
+        elif op == '!=':
+            return '\\neq '
         else:
             return op
 
