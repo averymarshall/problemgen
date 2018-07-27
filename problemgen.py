@@ -5,6 +5,7 @@ import random
 import os
 import math as m
 import pdb
+import sys
 
 class Term:
     '''
@@ -580,38 +581,6 @@ class Generator:
         self.problem_list = []
         self.worksheet_fn = ''
 
-    def __str__(self):
-        problems = ''
-        for p in self.problem_list:
-            problems += str(p) + '\n'
-        return problems
-        
-    def clear(self):
-        '''
-        Resets all member variables in the generator back to default
-        values.
-        '''
-        self.problem_list = []
-        self.worksheet_fn = ''
-
-    def shuffle(self):
-        '''
-        Shuffles the order of the expressions in expression list.
-        '''
-        random.shuffle(self.problem_list)
-
-    def add_problem(self, p):
-        '''
-        Adds a problem to problem list, not allowing duplicates.
-        Returns a boolean.
-        '''
-        # Checking for duplicate
-        for problem in self.problem_list:
-            if str(problem) == str(p):
-                return False
-        # Adding problem
-        self.problem_list.append(p)
-        return True
 
     def make_worksheet(self, output_fn='worksheet.tex', author='', 
             title="Worksheet", message=''):
@@ -1203,13 +1172,501 @@ class Generator:
 
         return problem
 
+################################### Error classes
+class Error(Exception):
+    '''Base class for exceptions in this module.'''
+    pass
+
+class GeneratorError(Error):
+    '''Exception raised for errors with generation of Problems.
+
+    Member variables:
+    type_prob        -   type of problem being generated
+    message     -   explanation of error
+    '''
+
+    def __init__(self, type_prob, message):
+        self.type_prob = type_prob
+        self.message = message
+
 # Add problem container with all of the add methods and a problem list
 # have worksheet be a child class
 class ProblemContainer:
     '''
     Class designed to add and maintain a list of problems.
 
+    Member variables:
+    gen         -   Generator used to create all of the problems.
+    problems    -   List of problems contained within the container.
 
+    Constants:
+    NUM_ATTEMPTS -  number of times an attempt at generating a non-duplicate
+                    problem can be made before raising an Exception
+    '''
+
+    def __init__(self):
+        self.gen = Generator()
+        self.problems = []
+        self.NUM_ATTEMPTS = 200
+
+    def __str__(self):
+        problems_str = ''
+        for p in self.problems:
+            problems_str += str(problems.index(p)) + '. ' + str(p) + '\n'
+        return problems
+        
+    def clear_problems(self):
+        '''
+        Resets all problems.
+        '''
+        self.problem_list = []
+
+    def shuffle(self):
+        '''
+        Shuffles the order of the problems.
+        '''
+        random.shuffle(self.problems)
+
+    def add_problem(self, p):
+        '''
+        Adds a problem to problem list, not allowing duplicates.
+        Returns a boolean (True if problem was added successfully,
+        false otherwise)
+        '''
+        # Checking for duplicate
+        for problem in self.problems:
+            if str(problem) == str(p):
+                return False
+        # Adding problem
+        self.problems.append(p)
+        return True
+
+    def add_algebraic_expression(self, num_terms=2, types='i',
+            symbols='x', order=1, mixed_var=False, coeff=[], 
+            max_lowest_term=10, max_multiple=1, same_base_root=True):
+        '''
+        Adds a generic algebraic expression (involving denoted variables to the order
+        specified) as a problem (where the goal is to simplify).
+
+        Arguments:
+
+        num_terms       -   the number of terms in the Expression. 
+                            Default 2.
+        types           -   The types of coefficients allowed to appear.
+                            This is expresssed as a string, containing only
+                            the characters 'i' (positive integers), 'r'
+                            (square roots), and/or 'f' (fractions).
+                            Default 'i'.
+        symbols         -   A string listing the variables to be used in the 
+                            expression. Must be single character variables.
+                            Default 'x'.
+        order           -   The order of the expression to be generated.
+                            Default 1.
+        mixed_var       -   Denotes if the expression should mix different 
+                            variables together (within the bounds of the order)
+                            or not.
+        coeff           -   A list containing coefficients to be used in creating
+                            the expression. They should be in order from highest 
+                            order to lowest order
+        max_lowest_term -   the largest number that can appear in the reduced
+                            expression. (Of course, larger numbers may appear due
+                            to the operations being done.)
+        max_multiple    -   the maximum multiplier used in the creation of fractions
+                            and radicals.
+        same_base_root  -   bool determining if all radicals in the expression 
+                            should reduce to the same base root.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                expr = self.gen.gen_algebraic_expression(num_terms=num_terms, types=types,
+                        symbols=symbols, order=order, mixed_var=mixed_var, coeff=coeff, 
+                        max_lowest_term=max_lowest_term, max_multiple=max_multiple, same_base_root=same_base_root)
+                # Attempting to add it
+                if self.add_problem(Problem(expr)):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('algebraic', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
+        '''
+        Adds a Problem for converting decimals to fractions.
+        Arguments:
+        max_lowest_term
+                    -   the largest number that can appear in the reduced
+                        expression. (Of course, larger numbers may appear due
+                        to the operations being done.)
+        max_multiple
+                    -   the maximum multiplier used in the creation of fractions
+                        and radicals.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                prob = self.gen.gen_dec_to_frac(max_lowest_term=max_lowest_term,
+                        max_multiple=max_multiple)
+                # Attempting to add it
+                if self.add_problem(prob):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('dec_to_frac', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
+        '''
+        Adds a Problem for converting fractions to decimals.
+
+        Arguments:
+        max_lowest_term
+                    -   the largest number that can appear in the reduced
+                        expression. (Of course, larger numbers may appear due
+                        to the operations being done.)
+        max_multiple
+                    -   the maximum multiplier used in the creation of fractions
+                        and radicals.
+        '''
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                prob = self.gen.gen_frac_to_dec(max_lowest_term=max_lowest_term,
+                        max_multiple=max_multiple)
+                # Attempting to add it
+                if self.add_problem(prob):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('frac_to_dec', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def add_equation(self, num_lhs_terms=2, num_rhs_terms=1, types='i',
+            symbols='x', order_lhs=1, order_rhs=0, lhs_coeff=[],
+            rhs_coeff=[],
+            mixed_var=False, max_lowest_term=10, middle_sign='=',
+            max_multiple=1, same_base_root=True):
+        '''
+        Adds an equation involving denoted variables to the order 
+        specified (as a Problem).
+
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        order_lhs       -   Order of the left hand side expression. 
+                            Default 1
+        order_rhs       -   Order of the right hand side expression.
+                            Default 0.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                eq = self.gen.gen_equation(num_lhs_terms=num_lhs_terms, 
+                        num_rhs_terms=num_rhs_terms, types=types,
+                        symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs, 
+                        lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
+                        mixed_var=mixed_var, max_lowest_term=max_lowest_term,
+                        middle_sign=middle_sign, max_multiple=max_multiple,
+                        same_base_root=same_base_root)
+                # Attempting to add it
+                if self.add_problem(Problem(eq)):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('generic_equation', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+
+    def add_factorable_expression(self, order=2, max_lowest_term=10,
+            symbols='x', leading_coeff=False):
+        '''
+        Adds a problem to the given order requiring the factoring of
+        a polynominal.
+
+        Arguments:
+        order       -   The order of the resulting polynomial.
+        symbols     -   a string containing the variables that
+                        should be used.
+        leading_coeff   -   Set to true to have a leading coeff
+                            for the binomial terms that is 
+                            greater than 0.
+
+        Returns a tuple of expressions. The first expression is still
+        factored, the second expression is expanded.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                exprs = self.gen.gen_factorable_expression(order=order,
+                        max_lowest_term=max_lowest_term)
+                # Setting up problem
+                prob_factored = Problem(exprs[0]) # the question and solution here are both factored
+                prob_expanded = Problem(exprs[1])
+                prob = prob_expanded
+                prob.latex_solution = prob_factored.latex_solution
+                prob.str_solution = prob_factored.str_solution
+                # Attempting to add it
+                if self.add_problem(prob):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('factorable', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def add_expandable_expression(self, order=2, max_lowest_term=10,
+            symbols='x', leading_coeff=False):
+        '''
+        Adds a problem to the given order requiring the factoring of
+        a polynominal.
+
+        Arguments:
+        order       -   The order of the resulting polynomial.
+        symbols     -   a string containing the variables that
+                        should be used.
+        leading_coeff   -   Set to true to have a leading coeff
+                            for the binomial terms that is 
+                            greater than 0.
+
+        Returns a tuple of expressions. The first expression is still
+        factored, the second expression is expanded.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                exprs = self.gen.gen_factorable_expression(order=order,
+                        max_lowest_term=max_lowest_term)
+                # Setting up problem
+                prob_factored = Problem(exprs[0]) # the question and solution here are both factored
+                prob_expanded = Problem(exprs[1])
+                prob = prob_factored
+                prob.latex_solution = prob_expanded.latex_solution
+                prob.str_solution = prob_expanded.str_solution
+                # Attempting to add it
+                if self.add_problem(prob):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('expandable', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def gen_linear(self, max_lowest_term=10, max_multiple=1, types='i',
+            num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
+            middle_sign='=', mixed_var=False, symbols='x',
+            same_base_root=True, order_lhs=1, order_rhs=0):
+        '''
+        Adds a linear equation to the problem list.
+
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        symbols         -   lists the variables that should be used as a string.
+                            Default 'x'.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
+
+        Returns Equation.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                eq = self.gen.gen_linear(max_lowest_term=max_lowest_term, 
+                        max_multiple=max_multiple, types=types,
+                        num_lhs_terms=num_lhs_terms, num_rhs_terms=num_rhs_terms,
+                        lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
+                        middle_sign=middle_sign, mixed_var=mixed_var,
+                        symbols=symbols, same_base_root=same_base_root, 
+                        order_lhs=order_lhs, order_rhs=order_rhs)
+                # Attempting to add it
+                if self.add_problem(Problem(eq)):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('linear', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def add_numerical_expression(self, num_terms=2, op='+-', types='i',
+            max_lowest_term=10, max_multiple=1, same_base_root=True):
+        '''
+        Adds an expression involving a chosen quantity of numbers and their
+        solution.
+
+        * Note : all radicals involved in the expression
+
+        Arguments:
+        num_terms   -   the number of terms in the Expression. Default 2.
+        op          -   a string expressing which operations should be used.
+                        String should only contain the characters +, -, *, ^, or
+                        /. For example, the string '+/' would indicate the 
+                        problem should include addition and/or division.
+                        Default '+-'.
+        types       -   The types of numbers that should be allowed to appear.
+                        This is expressed as a string, containing only the 
+                        characters 'i' (positive integers), 'r' (square roots),
+                        'f' (fractions).
+                        Default 'i'.
+        max_lowest_term
+                    -   the largest number that can appear in the reduced
+                        expression. (Of course, larger numbers may appear due
+                        to the operations being done.)
+        max_multiple
+                    -   the maximum multiplier used in the creation of fractions
+                        and radicals.
+        same_base_root
+                    -   bool determining if all radicals in the expression 
+                        should reduce to the same base root.
+
+        Returns an Expression.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                expr = self.gen.gen_numerical_expression(num_terms=num_terms,
+                        op=op, types=types, max_lowest_term=max_lowest_term,
+                        max_multiple=max_mulitple, same_base_root=same_base_root)
+                # Attempting to add it
+                if self.add_problem(Problem(expr)):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('numerical', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    def gen_quadratic(self, max_lowest_term=10, factorable=True,
+            solvable=True, leading_coeff=False, middle_sign='='):
+        '''
+        Adds a quadratic equation that can be factorable, unfactorable, or unsolvable.
+
+        Arguments:
+
+        max_lowest_term     -   The lowest coefficient that can appear in the problem.
+        factorable          -   bool determining if the equation should be factorable.
+        solvable            -   bool determining if the equation should be solvable.
+        leading_coeff       -   bool determining if a in ax^2 + bx + c should be 1 or not.
+                                False means a = 1.
+        middle_sign         -   Determines if this is an equation or an inequality.
+                                Appropriate arguments are '=', '>=', '<=', '<', '>', '!='.
+
+        Returns an Equation.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                eq = self.gen.gen_quadratic(max_lowest_term=max_lowest_term,
+                        factorable=factorable, solvable=solvable, 
+                        leading_coeff=leading_coeff, middle_sign=middle_sign)
+                # Attempting to add it
+                if self.add_problem(Problem(eq)):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('quadratic', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
 
 # Latex template
 TEMPLATE = '''
