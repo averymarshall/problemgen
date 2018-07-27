@@ -89,8 +89,14 @@ class Expression:
 
     def zero_clean(self):
         '''
-        Deleting any terms that are zero in unreduced form.
+        Deleting any terms that are zero in unreduced form unless it is the only term.
+        this is so that the expression doesn't show stuff like 7x + 0 + 1
+
+        THIS FUNCTION IS SCREWED IF YOU ARE MULTIPLYING BY ZERO AND NOT JUST ADDING IT
+        FIX
         '''
+        if len(self.unreduced_terms) <= 1:
+            return
         for i in reversed(range(len(self.unreduced_terms))):
             if self.unreduced_terms[i].sympy_term == 0:
                 del self.unreduced_terms[i]
@@ -582,79 +588,6 @@ class Generator:
         self.worksheet_fn = ''
 
 
-    def make_worksheet(self, output_fn='worksheet.tex', author='', 
-            title="Worksheet", message=''):
-        '''
-        Takes a predefined latex template, an author, a title, and a list of 
-        problems with their solutions and generates a latex worksheet.
-
-        Arguments:
-        template_fn:    the latex template to use, default generator_template.tex. 
-                        Using a custom template is not recommended.
-        author:         a string to be substituted into the author of the latex
-                        document.
-        title:          a string to be substituted into the title of the latex 
-                        document.
-        message:        a string to display a message at the beginning of the
-                        document.
-        output_fn:      the filename to save the generated worksheet to.
-
-        Returns nothing.
-        '''
-        # Opening template
-        template = TEMPLATE 
-
-        # Formatting problems to fit into a latex enumerate environment
-        question_str = ''
-        solution_str = ''
-        for p in self.problem_list:
-            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_question 
-            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_solution 
-
-        # Creating author and title strings
-        title_str = '\\chead{\\textbf{\\LARGE %s }}\n' % title
-        author_str = '\\rhead{%s}\n' % author
-
-        # Subbing strings into template to make the worksheet. The template
-        # should have 5 separate %s characters marking the locations of each
-        # of these substitutions in order.
-        worksheet = template % (title_str, author_str, message, question_str,
-                solution_str)
-
-        # Saving worksheet
-        worksheet_file = open(output_fn, 'w')
-        worksheet_file.write(worksheet)
-        worksheet_file.close()
-
-        # Compiling worksheet
-        os.system("pdflatex %s" % output_fn)
-        
-        # Cleaning files and organizing
-        os.system("rm *.aux *.log")
-        worksheet_dir = 'worksheets'
-        tex_dir = 'tex'
-        if not os.path.exists(worksheet_dir):
-            os.makedirs(worksheet_dir)
-        if not os.path.exists(tex_dir):
-            os.makedirs(tex_dir)
-        os.system("mv " + output_fn + ' ' +  tex_dir + '/' + output_fn)
-        output_pdf = output_fn.replace('.tex', '.pdf')
-        os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
-
-        # Saving worksheet name
-        self.worksheet_fn = worksheet_dir + '/' + output_pdf 
-
-    def show_worksheet(self):
-        '''
-        Uses default pdf viewer to display a filename.
-
-        Arguments:
-
-        filename :      filename of the file to display.
-
-        Returns nothing.
-        '''
-        os.system('xdg-open "%s"' % self.worksheet_fn)
 
 
     def gen_factorable_expression(self, order=2, max_lowest_term=10,
@@ -1212,7 +1145,7 @@ class ProblemContainer:
     def __str__(self):
         problems_str = ''
         for p in self.problems:
-            problems_str += str(problems.index(p)) + '. ' + str(p) + '\n'
+            problems_str += str(self.problems.index(p)) + '. ' + str(p) + '\n'
         return problems
         
     def clear_problems(self):
@@ -1513,7 +1446,7 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
-    def gen_linear(self, max_lowest_term=10, max_multiple=1, types='i',
+    def add_linear(self, max_lowest_term=10, max_multiple=1, types='i',
             num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
             middle_sign='=', mixed_var=False, symbols='x',
             same_base_root=True, order_lhs=1, order_rhs=0):
@@ -1630,7 +1563,7 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
-    def gen_quadratic(self, max_lowest_term=10, factorable=True,
+    def add_quadratic(self, max_lowest_term=10, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
         Adds a quadratic equation that can be factorable, unfactorable, or unsolvable.
@@ -1668,6 +1601,106 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
+class Worksheet(ProblemContainer):
+    '''
+    Class for creating a worksheet.
+
+    Member variables:
+
+    worksheet_fn: Filename of the worksheet file. Should end in .tex.
+    output_fn: Filename of output pdf.
+    title:  Title of the worksheet. should be a string.
+    message: Message to be displayed at the beginning of the worksheet.
+    author: Author of the worksheet. Should be a string.
+
+    Member variables from ProblemContainer (parent class)
+
+    gen: Generator used to create problems.
+    problems: list of Problems.
+    '''
+
+    def __init__(self, worksheet_fn):
+        assert type(worksheet_fn) == str
+        ProblemContainer.__init__(self)
+        self.worksheet_fn = worksheet_fn
+        self.title = ''
+        self.author = ''
+        self.message = ''
+        self.output_fn = ''
+
+    def set_title(self, title):
+        assert type(title) == str
+        self.title = title
+
+    def set_author(self, author):
+        assert type(author) == str
+        self.author = author
+
+    def set_message(self, message):
+        assert type(message) == str
+        self.message = message
+
+    def make(self):  
+        '''
+        Takes a predefined latex template, an author, a title, and a list of 
+        problems with their solutions and generates a latex worksheet.
+
+        Returns nothing.
+        '''
+        # Opening template
+        template = TEMPLATE 
+
+        # Formatting problems to fit into a latex enumerate environment
+        question_str = ''
+        solution_str = ''
+        for p in self.problems:
+            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_question 
+            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_solution 
+
+        # Creating author and title strings
+        title_str = '\\chead{\\textbf{\\LARGE %s }}\n' % self.title
+        author_str = '\\rhead{%s}\n' % self.author
+
+        # Subbing strings into template to make the worksheet. The template
+        # should have 5 separate %s characters marking the locations of each
+        # of these substitutions in order.
+        worksheet = template % (title_str, author_str, self.message, question_str,
+                solution_str)
+
+        # Saving worksheet
+        worksheet_file = open(self.worksheet_fn, 'w')
+        worksheet_file.write(worksheet)
+        worksheet_file.close()
+
+        # Compiling worksheet
+        os.system("pdflatex %s" % self.worksheet_fn)
+        
+        # Cleaning files and organizing
+        os.system("rm *.aux *.log")
+        worksheet_dir = 'worksheets'
+        tex_dir = 'tex'
+        if not os.path.exists(worksheet_dir):
+            os.makedirs(worksheet_dir)
+        if not os.path.exists(tex_dir):
+            os.makedirs(tex_dir)
+        os.system("mv " + self.worksheet_fn + ' ' +  tex_dir + '/' + self.worksheet_fn)
+        output_pdf = self.worksheet_fn.replace('.tex', '.pdf')
+        os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
+
+        # Saving worksheet name
+        self.output_fn = worksheet_dir + '/' + output_pdf 
+
+    def show(self):
+        '''
+        Uses default pdf viewer to display a filename.
+
+        Arguments:
+
+        filename :      filename of the file to display.
+
+        Returns nothing.
+        '''
+        os.system('xdg-open "%s"' % self.output_fn)
 # Latex template
 TEMPLATE = '''
 \\documentclass[11pt]{article}
