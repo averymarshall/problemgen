@@ -590,11 +590,11 @@ class Generator:
 
 
 
-    def gen_factorable_expression(self, order=2, max_lowest_term=10,
-            symbols='x', leading_coeff=False):
+    def gen_factorable_expression(self, order=2, factor_order=1, max_lowest_term=10,
+            symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
         '''
         Generates an expression to the given order that is the
-        product of a series of binomial terms.
+        product of a series of factors (default binominal) terms.
 
         Arguments:
         order       -   The order of the resulting polynomial.
@@ -603,16 +603,19 @@ class Generator:
         leading_coeff   -   Set to true to have a leading coeff
                             for the binomial terms that is 
                             greater than 0.
+        factor_order    -   order of the binominal terms
+        len_factor      -   length of individual factors, default 2.
 
-        Returns a tuple of expressions. The first expression is still
-        factored, the second expression is expanded.
+        Returns an expression where the expanded form is in the 
+        reduced terms, and the factored expression is stored in the 
+        unreduced terms.
         '''
         # Generating factors
         if leading_coeff:
-            factors = [self.gen_algebraic_expression() for i in range(order)]
+            factors = [self.gen_algebraic_expression(num_terms=len_factor, order=factor_order, symbols=symbols, mixed_var=mixed_var) for i in range(order)]
         else:
             factors = [self.gen_algebraic_expression(\
-                    coeff=[1, random.randint(0, max_lowest_term)]) \
+                    num_terms=len_factor, order=factor_order, coeff=[1, random.randint(0, max_lowest_term)], symbols=symbols, mixed_var=mixed_var) \
                     for i in range(order)]
         # Multiplying factors
         for f in factors:
@@ -1146,7 +1149,7 @@ class ProblemContainer:
         problems_str = ''
         for p in self.problems:
             problems_str += str(self.problems.index(p)) + '. ' + str(p) + '\n'
-        return problems
+        return problems_str
         
     def clear_problems(self):
         '''
@@ -1360,14 +1363,15 @@ class ProblemContainer:
             print("Unexpected error:", sys.exc_info()[0])
 
 
-    def add_factorable_expression(self, order=2, max_lowest_term=10,
-            symbols='x', leading_coeff=False):
+    def add_factorable_expression(self, order=2, max_lowest_term=10, factor_order=1,
+            symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
         '''
         Adds a problem to the given order requiring the factoring of
         a polynominal.
 
         Arguments:
         order       -   The order of the resulting polynomial.
+        factor_order-   The order of the binominal factors of the resulting polynominal.
         symbols     -   a string containing the variables that
                         should be used.
         leading_coeff   -   Set to true to have a leading coeff
@@ -1381,14 +1385,9 @@ class ProblemContainer:
         try:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
-                exprs = self.gen.gen_factorable_expression(order=order,
-                        max_lowest_term=max_lowest_term)
-                # Setting up problem
-                prob_factored = Problem(exprs[0]) # the question and solution here are both factored
-                prob_expanded = Problem(exprs[1])
-                prob = prob_expanded
-                prob.latex_solution = prob_factored.latex_solution
-                prob.str_solution = prob_factored.str_solution
+                expr = self.gen.gen_factorable_expression(factor_order=factor_order, order=order, leading_coeff=leading_coeff,
+                        max_lowest_term=max_lowest_term, symbols=symbols, mixed_var=mixed_var, len_factor=len_factor)
+                prob = Problem(expr)
                 # Attempting to add it
                 if self.add_problem(prob):
                     return
@@ -1403,14 +1402,15 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
-    def add_expandable_expression(self, order=2, max_lowest_term=10,
-            symbols='x', leading_coeff=False):
+    def add_expandable_expression(self, order=2, max_lowest_term=10, factor_order=1,
+            symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
         '''
-        Adds a problem to the given order requiring the factoring of
+        Adds a problem to the given order requiring the expansion of
         a polynominal.
 
         Arguments:
         order       -   The order of the resulting polynomial.
+        factor_order -  The order of the binominal terms.
         symbols     -   a string containing the variables that
                         should be used.
         leading_coeff   -   Set to true to have a leading coeff
@@ -1424,14 +1424,14 @@ class ProblemContainer:
         try:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
-                exprs = self.gen.gen_factorable_expression(order=order,
-                        max_lowest_term=max_lowest_term)
+                expr = self.gen.gen_factorable_expression(len_factor=len_factor, factor_order=factor_order, order=order, leading_coeff=leading_coeff,
+                        max_lowest_term=max_lowest_term, symbols=symbols, mixed_var = mixed_var)
+                # swap the reduced and unreduced terms
+                temp = expr.unreduced_terms
+                expr.unreduced_terms = expr.reduced_terms
+                expr.reduced_terms = temp
                 # Setting up problem
-                prob_factored = Problem(exprs[0]) # the question and solution here are both factored
-                prob_expanded = Problem(exprs[1])
-                prob = prob_factored
-                prob.latex_solution = prob_expanded.latex_solution
-                prob.str_solution = prob_expanded.str_solution
+                prob = Problem(expr)
                 # Attempting to add it
                 if self.add_problem(prob):
                     return
