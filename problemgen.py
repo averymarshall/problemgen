@@ -612,10 +612,10 @@ class Generator:
         '''
         # Generating factors
         if leading_coeff:
-            factors = [self.gen_algebraic_expression(num_terms=len_factor, order=factor_order, symbols=symbols, mixed_var=mixed_var) for i in range(order)]
+            factors = [self.gen_algebraic_expression(num_terms=len_factor, order=factor_order, symbols=symbols, mixed_var=mixed_var, max_lowest_term=max_lowest_term) for i in range(order)]
         else:
             factors = [self.gen_algebraic_expression(\
-                    num_terms=len_factor, order=factor_order, coeff=[1, random.randint(0, max_lowest_term)], symbols=symbols, mixed_var=mixed_var) \
+                    num_terms=len_factor, order=factor_order, coeff=[1, random.randint(0, max_lowest_term)], symbols=symbols, mixed_var=mixed_var, max_lowest_term=max_lowest_term) \
                     for i in range(order)]
         # Multiplying factors
         for f in factors:
@@ -1563,7 +1563,9 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
-    def add_quadratic(self, max_lowest_term=10, factorable=True,
+    # coeffs are generated like max_lowest_term^2, not like max_lowest_term
+    # fix it
+    def add_quadratic(self, max_lowest_term=4, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
         Adds a quadratic equation that can be factorable, unfactorable, or unsolvable.
