@@ -1,12 +1,12 @@
-from sympy import *
-from importlib import reload
-from sympy.solvers.inequalities import solve_poly_inequalities
 import random
 import os
 import math as m
 import pdb
 import sys
 
+from sympy import *
+from sympy.solvers.inequalities import solve_poly_inequalities
+from sympy.solvers.solveset import linsolve
 class Term:
     '''
     Object designed to store several aspects of an individual term used to
@@ -93,7 +93,7 @@ class Expression:
         this is so that the expression doesn't show stuff like 7x + 0 + 1
 
         THIS FUNCTION IS SCREWED IF YOU ARE MULTIPLYING BY ZERO AND NOT JUST ADDING IT
-        FIX
+        FIX BUG
         '''
         if len(self.unreduced_terms) <= 1:
             return
@@ -362,9 +362,13 @@ class System:
     variables       -   A list of all the variables contained within the system.
     '''
 
+    # TODO: add support for systems of inequalities
     def __init__(self, equations):
-        assert isinstance(equations, list)
-        self.equations = equations
+        assert isinstance(equations, list) or isinstance(equations, Equation)
+        if isinstance(equations, list):
+            self.equations = equations
+        elif isinstance(equations, Equation):
+            self.equations = [equations]
         self.variables = [e.variable for e in equations]
 
 class Problem:
@@ -406,6 +410,11 @@ class Problem:
             self.str_solution = self.str_solution_from_equation(data)
             self.latex_question = self.latex_question_from_equation(data)
             self.latex_solution = self.latex_solution_from_equation(data)
+        elif isinstance(data, System):
+            self.str_question = self.str_question_from_system(data)
+            self.str_solution = self.str_solution_from_system(data)
+            self.latex_question = self.latex_question_from_system(data)
+            self.latex_solution = self.latex_solution_from_system(data)
         elif isinstance(data, tuple):
             self.latex_question = data[0]
             self.latex_solution = data[1]
@@ -416,6 +425,43 @@ class Problem:
         '''
         return "Question: " + self.str_question + "\n" + "Solution: " + \
                 self.str_solution
+
+    def str_question_from_system(self, s):
+        str_question = ''
+        for e in s.equations:
+            str_question += str_question_from_equation(e) + '\n'
+        return str_question
+
+    def latex_question_from_system(self, s):
+        latex_question = ''
+        for e in s.equations:
+            latex_question += latex_question_from_equation(e) + ' \\ '
+
+    def str_solution_from_system(self, s):
+        str_solution = ''
+        # Getting list of equations such that they are equal to 0
+        eqs = [e.lhs - e.rhs for e in s.equations]
+        solutions = linsolve(eqs, tuple(s.variables))
+        if len(next(iter(solutions))) == 0:
+            return 'No solution'
+        # Iterating through solution
+        for i, sol in next(iter(solutions)):
+            str_solution += str(s.variables[i]) +  ' = ' + str(sol) + ','
+        del str_solution[-1] # deleting last extra comma
+        return str_solution
+
+    def latex_solution_from_system(self, s):
+        latex_solution = ''
+        # Getting list of equations such that they are equal to 0
+        eqs = [e.lhs - e.rhs for e in s.equations]
+        solutions = linsolve(eqs, tuple(s.variables))
+        if len(next(iter(solutions))) == 0:
+            return '\\text{No solution}'
+        # Iterating through solution
+        for i, sol in next(iter(solutions)):
+            latex_solution += latex(s.variables[i]) +  ' = ' + latex(sol) + ','
+        del latex_solution[-1] # deleting last extra comma
+        return latex_solution
 
     def str_question_from_equation(self, e):
         return self.str_question_from_expression(e.lhs) + \
@@ -470,7 +516,7 @@ class Problem:
 
         if len(solutions) == 0:
             # no solutions
-            return 'No solution'
+            return '\\text{No solution}'
 
         latex_solution = ''
         if e.middle_sign == '=':
@@ -1265,6 +1311,7 @@ class ProblemContainer:
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
+    # Fix bug for repeating decimals being truncated
     def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
         '''
         Adds a Problem for converting fractions to decimals.
@@ -1564,7 +1611,7 @@ class ProblemContainer:
             print("Unexpected error:", sys.exc_info()[0])
 
     # coeffs are generated like max_lowest_term^2, not like max_lowest_term
-    # fix it
+    # fix bug it
     def add_quadratic(self, max_lowest_term=4, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
@@ -1717,6 +1764,7 @@ TEMPLATE = '''
 \\usepackage{lastpage}
 \\usepackage{multicol}
 \\usepackage{blindtext}
+\\usepackage{amstext}
 
 
 \\pagestyle{fancy}
