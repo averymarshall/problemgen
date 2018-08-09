@@ -678,7 +678,7 @@ class Generator:
 
     def gen_equation(self, num_lhs_terms=2, num_rhs_terms=1, types='i',
             symbols='x', order_lhs=1, order_rhs=0, lhs_coeff=[],
-            rhs_coeff=[],
+            rhs_coeff=[], variable='x',
             mixed_var=False, max_lowest_term=10, middle_sign='=',
             max_multiple=1, same_base_root=True):
         '''
@@ -715,6 +715,9 @@ class Generator:
         same_base_root  -   Boolean determining if radical expressions should have
                             the same base root so they can reduce to a single term.
                             Default True.
+        symbols         -   Variables in the equation. E.g. 'xy' will include x and y
+                            terms. Default 'x'.
+        variable        -   Variable to solve for.
         '''
         lhs_expr = self.gen_algebraic_expression(num_terms=num_lhs_terms,
                 types=types, symbols=symbols, order=order_lhs, coeff=lhs_coeff,
@@ -725,7 +728,7 @@ class Generator:
                 mixed_var=mixed_var, max_lowest_term=max_lowest_term,
                 max_multiple=max_multiple, same_base_root=same_base_root)
         equation = Equation(lhs_expr, rhs_expr, middle_sign=middle_sign, 
-                variable=symbols)
+                variable=variable)
         return equation
 
     def gen_algebraic_expression(self, num_terms=2, types='i',
@@ -1153,6 +1156,69 @@ class Generator:
         problem.latex_question = question 
 
         return problem
+
+    def gen_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1, 
+            types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
+            rhs_coeff=[], mixed_var=False, max_lowest_term=10, middle_sign='=',
+            max_multiple=1, same_base_root=True):
+        '''
+        Generates a System of Equations involving denoted variables to the
+        order specified.
+
+        Arguments:
+
+        num_equations   -   Number of Equations in the System. Default 2.
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        order_lhs       -   Order of the left hand side expression. 
+                            Default 1
+        order_rhs       -   Order of the right hand side expression.
+                            Default 0.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
+        symbols         -   Variables in the equation. E.g. 'xy' will include x and y
+                            terms. Default 'x'.
+        variable        -   Variable to solve for.
+        '''
+        equations = []
+        for i in range(num_equations):
+            if i > len(symbols):
+                # There's more equations than variables in this equation,
+                # so the latter equations are set up with the first variable
+                variable = symbols[0]
+            else:
+                variable = symbols[i]
+            equations.append(self.gen_equation(num_lhs_terms=num_lhs_terms,
+                num_rhs_terms=num_rhs_terms, types=types, symbols=symbols,
+                order_lhs=order_lhs, order_rhs=order_rhs, lhs_coeff=lhs_coeff,
+                rhs_coeff=rhs_coeff, mixed_var=mixed_var,
+                max_lowest_term=max_lowest_term, middle_sign=middle_sign,
+                max_multiple=max_multiple, same_base_root=same_base_root,
+                variable=variable))
+        variables = [Symbol(s) for s in symbols]
+        return System(equations, variables) 
 
 ################################### Error classes
 class Error(Exception):
