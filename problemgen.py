@@ -1200,7 +1200,6 @@ class Generator:
                             Default True.
         symbols         -   Variables in the equation. E.g. 'xy' will include x and y
                             terms. Default 'x'.
-        variable        -   Variable to solve for.
         '''
         equations = []
         for i in range(num_equations):
@@ -1342,8 +1341,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
         '''
@@ -1374,8 +1373,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     # Fix bug for repeating decimals being truncated
     def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
@@ -1407,8 +1406,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     def add_equation(self, num_lhs_terms=2, num_rhs_terms=1, types='i',
             symbols='x', order_lhs=1, order_rhs=0, lhs_coeff=[],
@@ -1472,8 +1471,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
 
     def add_factorable_expression(self, order=2, max_lowest_term=10, factor_order=1,
@@ -1512,8 +1511,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     def add_expandable_expression(self, order=2, max_lowest_term=10, factor_order=1,
             symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
@@ -1556,8 +1555,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     def add_linear(self, max_lowest_term=10, max_multiple=1, types='i',
             num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
@@ -1619,8 +1618,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     def add_numerical_expression(self, num_terms=2, op='+-', types='i',
             max_lowest_term=10, max_multiple=1, same_base_root=True):
@@ -1673,11 +1672,11 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
 
     # coeffs are generated like max_lowest_term^2, not like max_lowest_term
-    # fix bug it
+    # TODO: bug 
     def add_quadratic(self, max_lowest_term=4, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
@@ -1713,8 +1712,77 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
+        except Exception as e:
+            print(e)
+
+    def add_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1,
+            types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
+            rhs_coeff=[], mixed_var=False, max_lowest_term=10, middle_sign='=',
+            max_multiple=1, same_base_root=True):
+        '''
+        Generates a System of Equations involving denoted variables to the
+        order specified.
+
+        Arguments:
+
+        num_equations   -   Number of Equations in the System. Default 2.
+        num_lhs_terms   -   Number of terms on the left hand side of the
+                            equation. Default 2.
+        num_rhs_terms   -   Number of terms on the right hand side of the
+                            equation. Default 1.
+        types           -   Types of coefficients. 'i' -> Integers,
+                            'f' -> fractions, 'r' -> square roots.
+        order_lhs       -   Order of the left hand side expression. 
+                            Default 1
+        order_rhs       -   Order of the right hand side expression.
+                            Default 0.
+        lhs_coeff       -   A list of the coefficients for the lhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        rhs_coeff       -   A list of the coefficients for the rhs. Should
+                            be of the same length as the number of terms
+                            on the left hand side, and will override any
+                            automatic number generation. Default [], allowing
+                            automatic number generation.
+        mixed_var       -   boolean determining if variables should be mixed
+                            or not (xy vs. x^2 + y^2). Default False.
+        max_lowest_term -   the maximum coefficient obtained through automatic
+                            coefficient generation. Defautl 10.
+        max_multiple    -   Maximum multiple to mulitply coefficients by. This
+                            will increase the threshold for automatic numbers
+                            beyond max_lowest_term. Default 1.
+        same_base_root  -   Boolean determining if radical expressions should have
+                            the same base root so they can reduce to a single term.
+                            Default True.
+        symbols         -   Variables in the equation. E.g. 'xy' will include x and y
+                            terms. Default 'x'.
+        '''
+
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                syst = self.gen.gen_system(num_equations=num_equations,
+                        num_lhs_terms=num_lhs_terms, num_rhs_terms=num_rhs_terms,
+                        types=types, symbols=symbols, order_lhs=order_lhs,
+                        order_rhs=order_rhs, lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
+                        mixed_var=mixed_var, max_lowest_term=max_lowest_term, 
+                        middle_sign=middle_sign, max_multiple=max_multiple,
+                        same_base_root=same_base_root)
+                # Attempting to add it
+                if self.add_problem(Problem(syst)):
+                    return
+                # Problem was a dupe, looping back
+                # All of the problems generated were dupes, likely aren't many unique
+                # problems for the parameters given
+                raise GeneratorError('system', 'Unable to generate additional ' +
+                        'unique problems after trying ' + str(self.NUM_ATTEMPTS) +
+                        ' times.' + 'Input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except Exception as e:
+            print(e)
 
 class Worksheet(ProblemContainer):
     '''
