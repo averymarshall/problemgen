@@ -3,10 +3,22 @@ import os
 import math as m
 import pdb
 import sys
+import linecache
 
 from sympy import *
 from sympy.solvers.inequalities import solve_poly_inequalities
 from sympy.solvers.solveset import linsolve
+
+# From Apogentus on stackexchange
+def PrintException():
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
+    print('EXCEPTION IN (%s, LINE %d "%s"): %s' % (filename, lineno, line.strip(), exc_obj))
+
 class Term:
     '''
     Object designed to store several aspects of an individual term used to
@@ -121,6 +133,15 @@ class Expression:
         self.unreduced_terms = [unreduced_term]
         self.reduced_terms = [reduced_term]
         self.operations = ['', '']
+
+    def get_sympy(self):
+        '''
+        Returns the sympy term that represents the reduced version of the 
+        reduced terms.
+        '''
+        e = self.copy()
+        e.simplify()
+        return e.reduced_terms[0].sympy_term
 
     def combine_terms(self, terms, ops):
         '''
@@ -429,38 +450,45 @@ class Problem:
     def str_question_from_system(self, s):
         str_question = ''
         for e in s.equations:
-            str_question += str_question_from_equation(e) + '\n'
+            str_question += self.str_question_from_equation(e) + '\n'
         return str_question
 
+    # TODO: make the equals signs in the equations be aligned. Use
+    # \begin{align*} ?
     def latex_question_from_system(self, s):
         latex_question = ''
         for e in s.equations:
-            latex_question += latex_question_from_equation(e) + ' \\ '
+            latex_question += self.latex_question_from_equation(e) + ' \\\\ '
+        return latex_question
 
     def str_solution_from_system(self, s):
         str_solution = ''
         # Getting list of equations such that they are equal to 0
-        eqs = [e.lhs - e.rhs for e in s.equations]
+        eqs = [(e.lhs - e.rhs).get_sympy() for e in s.equations]
         solutions = linsolve(eqs, tuple(s.variables))
-        if len(next(iter(solutions))) == 0:
+        if len(solutions) == 0:
             return 'No solution'
         # Iterating through solution
-        for i, sol in next(iter(solutions)):
-            str_solution += str(s.variables[i]) +  ' = ' + str(sol) + ','
-        del str_solution[-1] # deleting last extra comma
+        for solution in solutions:
+            for i, sol in enumerate(solution):
+                str_solution += str(s.variables[i]) +  ' = ' + str(sol) + ', '
+            str_solution = str_solution[:-1] # deleting last extra comma
+            str_solution += '\n'
         return str_solution
 
     def latex_solution_from_system(self, s):
         latex_solution = ''
         # Getting list of equations such that they are equal to 0
-        eqs = [e.lhs - e.rhs for e in s.equations]
+        eqs = [(e.lhs - e.rhs).get_sympy() for e in s.equations]
         solutions = linsolve(eqs, tuple(s.variables))
-        if len(next(iter(solutions))) == 0:
+        if len(solutions) == 0:
             return '\\text{No solution}'
         # Iterating through solution
-        for i, sol in next(iter(solutions)):
-            latex_solution += latex(s.variables[i]) +  ' = ' + latex(sol) + ','
-        del latex_solution[-1] # deleting last extra comma
+        for solution in solutions:
+            for i, sol in enumerate(solution):
+                latex_solution += latex(s.variables[i]) +  ' = ' + latex(sol) + ','
+            latex_solution = latex_solution[:-1] # deleting last extra comma
+            latex_solution += '\\\\'
         return latex_solution
 
     def str_question_from_equation(self, e):
@@ -1157,6 +1185,7 @@ class Generator:
 
         return problem
 
+    # TODO: decrease the rates of problems generated without solutions
     def gen_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1, 
             types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
             rhs_coeff=[], mixed_var=False, max_lowest_term=10, middle_sign='=',
@@ -1216,8 +1245,7 @@ class Generator:
                 max_lowest_term=max_lowest_term, middle_sign=middle_sign,
                 max_multiple=max_multiple, same_base_root=same_base_root,
                 variable=variable))
-        variables = [Symbol(s) for s in symbols]
-        return System(equations, variables) 
+        return System(equations) 
 
 ################################### Error classes
 class Error(Exception):
@@ -1341,8 +1369,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
         '''
@@ -1373,8 +1401,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     # Fix bug for repeating decimals being truncated
     def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
@@ -1406,8 +1434,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_equation(self, num_lhs_terms=2, num_rhs_terms=1, types='i',
             symbols='x', order_lhs=1, order_rhs=0, lhs_coeff=[],
@@ -1471,8 +1499,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
 
     def add_factorable_expression(self, order=2, max_lowest_term=10, factor_order=1,
@@ -1511,8 +1539,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_expandable_expression(self, order=2, max_lowest_term=10, factor_order=1,
             symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
@@ -1555,8 +1583,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_linear(self, max_lowest_term=10, max_multiple=1, types='i',
             num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
@@ -1618,8 +1646,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_numerical_expression(self, num_terms=2, op='+-', types='i',
             max_lowest_term=10, max_multiple=1, same_base_root=True):
@@ -1672,8 +1700,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     # coeffs are generated like max_lowest_term^2, not like max_lowest_term
     # TODO: bug 
@@ -1712,8 +1740,8 @@ class ProblemContainer:
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
     def add_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1,
             types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
@@ -1749,7 +1777,7 @@ class ProblemContainer:
         mixed_var       -   boolean determining if variables should be mixed
                             or not (xy vs. x^2 + y^2). Default False.
         max_lowest_term -   the maximum coefficient obtained through automatic
-                            coefficient generation. Defautl 10.
+                            coefficient generation. Default 10.
         max_multiple    -   Maximum multiple to mulitply coefficients by. This
                             will increase the threshold for automatic numbers
                             beyond max_lowest_term. Default 1.
@@ -1781,8 +1809,8 @@ class ProblemContainer:
                         ' times.' + 'Input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
-        except Exception as e:
-            print(e)
+        except:
+            PrintException()
 
 class Worksheet(ProblemContainer):
     '''
