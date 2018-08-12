@@ -4,6 +4,7 @@ import math as m
 import pdb
 import sys
 import linecache
+import inflect
 
 from sympy import *
 from sympy.solvers.inequalities import solve_poly_inequalities
@@ -18,6 +19,94 @@ def PrintException():
     linecache.checkcache(filename)
     line = linecache.getline(filename, lineno, f.f_globals)
     print('EXCEPTION IN (%s, LINE %d "%s"): %s' % (filename, lineno, line.strip(), exc_obj))
+
+#TODO: add support for different bases
+class Number:
+    '''
+    Object designed to store a number in several different forms.
+
+    Member variables:
+    float           -   Number stored as an float, e.g. 42
+    word            -   Number stored as a string, e.g. forty-two
+    expanded        -   Number stored as a list of tuples of powers of self.base.
+                        428 would be stored as [(4, 2), (2, 1), (8, 0)] 
+                        (4 * 10^2 + 2 * 10^1 + 8 * 10^0)
+    scientific      -   Number stored as scientific notation. Stored as a tuple,
+                        e.g. (4.2, 1) to represent 42 = 4.2 * 10^1
+    base            -   base to store the number in.
+    '''
+
+    def __init__(self, num):
+        '''
+        Arguments:
+
+        num: number to use to initialize the Number
+        base: base the number should be represented in (default 10)
+        '''
+        self.num = float(num)
+        self.word = self.make_word()
+        self.expanded = self.make_expanded()
+        self.scientific = self.make_scientific()
+        self.base = 10
+
+    def make_word():
+        '''
+        Function to generate a new word given self.num.
+
+        Returns a string representing self.word.
+        '''
+        e = inflect.engine()
+        return e.number_to_words(self.num)
+
+    def make_expanded():
+        '''
+        Function to generate a new expanded form given self.num.
+        428 would be stored as [(4, 2), (2, 1), (8, 0)] 
+        (4 * 10^2 + 2 * 10^1 + 8 * 10^0)
+        '''
+        left_of_point = []
+        right_of_point = []
+        str_num = str(self.num)
+        if '.' in str_num:
+            # This float has components to the right and left of the 
+            # decimal point that need to be dealt with separately.
+            str_left_of_point = str_num[:str_num.index('.')]
+            str_right_of_point = str_num[str_num.index('.')+1:]
+            for i, str_n in enumerate(str_left_of_point[::-1]):
+                left_of_point.append((int(str_n), i))
+            # Switching list to descending order (3, 2, 1)
+            left_of_point[::-1]
+            for i, str_n in enumerate(str_right_of_point):
+                right_of_point.append((int(str_n), -i))
+            return left_of_point + right_of_point
+        else:
+            # no decimal point
+            for i, str_n in enumerate(str_num[::-1]):
+                left_of_point.append((int(str_n), i))
+            # Switching list to descending order (3, 2, 1)
+            left_of_point[::-1]
+            return left_of_point
+
+    def make_scientific():
+        '''
+        Returns a number in scientific form from self.num.
+        Returns as (float, exponent) to represent float * base^exponent.
+        '''
+        exp = 0
+        num = self.num
+        while num >= self.base:
+            num = num / self.base
+            exp += 1
+        while num < 1:
+            num = num * self.base
+            exp -= 1
+        return (num, exp)
+
+    def set_num(num):
+        self.num = num
+        self.word = self.make_word()
+        self.expanded = self.make_expanded()
+        self.scientific = self.make_scientific()
 
 class Term:
     '''
@@ -439,6 +528,8 @@ class Problem:
         elif isinstance(data, tuple):
             self.latex_question = data[0]
             self.latex_solution = data[1]
+            self.str_question = data[2]
+            self.str_solution = data[3]
 
     def __str__(self):
         '''
