@@ -26,7 +26,7 @@ class Number:
     Object designed to store a number in several different forms.
 
     Member variables:
-    float           -   Number stored as an float, e.g. 42
+    num           -   Number stored as an float, e.g. 42
     word            -   Number stored as a string, e.g. forty-two
     expanded        -   Number stored as a list of tuples of powers of self.base.
                         428 would be stored as [(4, 2), (2, 1), (8, 0)] 
@@ -44,12 +44,12 @@ class Number:
         base: base the number should be represented in (default 10)
         '''
         self.num = float(num)
+        self.base = 10 
         self.word = self.make_word()
         self.expanded = self.make_expanded()
         self.scientific = self.make_scientific()
-        self.base = 10
 
-    def make_word():
+    def make_word(self):
         '''
         Function to generate a new word given self.num.
 
@@ -58,7 +58,7 @@ class Number:
         e = inflect.engine()
         return e.number_to_words(self.num)
 
-    def make_expanded():
+    def make_expanded(self):
         '''
         Function to generate a new expanded form given self.num.
         428 would be stored as [(4, 2), (2, 1), (8, 0)] 
@@ -87,7 +87,7 @@ class Number:
             left_of_point[::-1]
             return left_of_point
 
-    def make_scientific():
+    def make_scientific(self):
         '''
         Returns a number in scientific form from self.num.
         Returns as (float, exponent) to represent float * base^exponent.
@@ -102,7 +102,7 @@ class Number:
             exp -= 1
         return (num, exp)
 
-    def set_num(num):
+    def set_num(self, num):
         self.num = num
         self.word = self.make_word()
         self.expanded = self.make_expanded()
@@ -752,9 +752,6 @@ class Generator:
         self.problem_list = []
         self.worksheet_fn = ''
 
-
-
-
     def gen_factorable_expression(self, order=2, factor_order=1, max_lowest_term=10,
             symbols='x', leading_coeff=False, mixed_var=False, len_factor=2):
         '''
@@ -957,6 +954,99 @@ class Generator:
             expression.zero_clean()
 
         return expression  
+
+    def gen_num_conv(self, q_type='num', s_type='word', types='i',
+            lower_num_bound=1, upper_num_bound=1e9):
+        '''
+        Generates a number conversion problem, i.e. taking a number written
+        as a decimal, in word form, in expanded form, or in scientific form
+        and rewriting it in one of the aforementioned forms.
+
+        Arguments:
+        q_type      -   Type of number to be converted from. Should be 'num'
+                        (for a decimal print out), 'word' (for a phrase 
+                        representing the number), 'expand' (for expanded form),
+                        'sci' (for scientific form).
+        s_type      -   Type of number to be converted to. Should be 'num'
+                        (for a decimal print out), 'word' (for a phrase 
+                        representing the number), 'expand' (for expanded form),
+                        'sci' (for scientific form).
+        types       -   Determines if the number should be an integer, decimal,
+                        etc. should be 'i' for integers, 'd' for decimals.
+        lower_num_bound     -   Lower bound of number generated
+        upper_num_bound     -   Upper bound of number generated
+        
+        Returns a Problem of the given specifications.
+        '''
+        assert type(q_type) == str
+        assert type(s_type) == str
+        assert type(types) == str
+        assert type(lower_num_bound) == int or type(lower_num_bound) == float
+        assert type(upper_num_bound) == int or type(upper_num_bound) == float
+        if types == 'i':
+            num = random.randint(int(lower_num_bound), int(upper_num_bound))
+        elif types == 'd':
+            num = random.uniform(lower_num_bound, upper_num_bound)
+        number = Number(num)
+
+        # Setting solution based upon argument
+        if s_type == 'num':
+            str_solution = str(number.num)
+            latex_solution = str(number.num)
+            conv_to = 'number'
+        elif s_type == 'word':
+            str_solution = number.word
+            latex_solution = '\\text{%s}' % number.word
+            conv_to = 'phrase'
+        elif s_type == 'expand':
+            str_solution = ''
+            latex_solution = ''
+            for pair in number.expanded:
+                str_solution += '%d * %d**%d + ' % (pair[0], number.base, pair[1])
+                latex_solution += '%d \\cdot %d^{%d} + ' % (pair[0], 
+                        number.base, pair[1])
+            # Removing extra ' + '
+            str_solution = str_solution[:-3]
+            latex_solution = latex_solution[:-3]
+            conv_to = 'expanded form'
+        elif s_type == 'sci':
+            str_solution = '%d * %d**%d' % (number.scientific[0], number.base,
+                    number.scientific[1])
+            latex_solution = '%d \\cdot %d^{%d}' % (number.scientific[0], number.base,
+                    number.scientific[1])
+            conv_to = 'scientific form'
+        # Setting question based upon argument
+        if q_type == 'num':
+            str_question = str(number.num) 
+            latex_question = str(number.num) 
+            str_question += '->(' + conv_to + ')'
+            latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
+        elif q_type == 'word':
+            str_question = number.word
+            latex_question = ('\\text{%s}' % number.word)
+            str_question += '->(' + conv_to + ')'
+            latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
+        elif q_type == 'expand':
+            str_question = ''
+            latex_question = ''
+            for pair in number.expanded:
+                str_question += '%d * %d**%d + ' % (pair[0], number.base, pair[1])
+                latex_question += '%d \\cdot %d^{%d} + ' % (pair[0], 
+                        number.base, pair[1])
+            # Removing extra ' + '
+            str_question = str_question[:-3]
+            latex_question = latex_question[:-3]
+            str_question += '->(' + conv_to + ')'
+            latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
+        elif q_type == 'sci':
+            str_question = '%d * %d**%d' % (number.scientific[0], number.base,
+                    number.scientific[1])
+            latex_question = '%d \\cdot %d^{%d}' % (number.scientific[0], number.base,
+                    number.scientific[1])
+            str_question += '->(' + conv_to + ')'
+            latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
+        return Problem((latex_question, latex_solution, str_question, 
+            str_solution))
 
     def gen_numerical_expression(self, num_terms=2, op='+-', types='i',
             max_lowest_term=10, max_multiple=1, same_base_root=True):
@@ -1463,6 +1553,47 @@ class ProblemContainer:
         except:
             PrintException()
 
+    def add_num_conv(self, q_type='num', s_type='word', types='i',
+            lower_num_bound=1, upper_num_bound=1e9):
+        '''
+        Adds a number conversion problem, i.e. taking a number written
+        as a decimal, in word form, in expanded form, or in scientific form
+        and rewriting it in one of the aforementioned forms.
+
+        Arguments:
+        q_type      -   Type of number to be converted from. Should be 'num'
+                        (for a decimal print out), 'word' (for a phrase 
+                        representing the number), 'expand' (for expanded form),
+                        'sci' (for scientific form).
+        s_type      -   Type of number to be converted to. Should be 'num'
+                        (for a decimal print out), 'word' (for a phrase 
+                        representing the number), 'expand' (for expanded form),
+                        'sci' (for scientific form).
+        types       -   Determines if the number should be an integer, decimal,
+                        etc. should be 'i' for integers, 'd' for decimals.
+        lower_num_bound     -   Lower bound of number generated
+        upper_num_bound     -   Upper bound of number generated
+        
+        '''
+        try:
+            for i in range(self.NUM_ATTEMPTS):
+                # Generating expression
+                prob = self.gen.gen_num_conv(q_type=q_type, s_type=s_type,
+                        types=types, lower_num_bound=lower_num_bound,
+                        upper_num_bound=upper_num_bound)
+                # Attempting to add it
+                if self.add_problem(prob):
+                    return
+                # Problem was a dupe, looping back
+            # All of the problems generated were dupes, there likely aren't many unique
+            # problems for the parameters given
+            raise GeneratorError('num_conv', 'Unable to generate additional ' +
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'Your input parameters may be too restrictive.')
+        except GeneratorError as e:
+            print('GeneratorError: %s' % e.message)
+        except:
+            PrintException()
     def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
         '''
         Adds a Problem for converting decimals to fractions.
@@ -1942,22 +2073,30 @@ class Worksheet(ProblemContainer):
         assert type(message) == str
         self.message = message
 
-    def make(self):  
+    # TODO: improve line break errors for fields in \text{}
+    def make(self, num_cols=2):  
         '''
         Takes a predefined latex template, an author, a title, and a list of 
         problems with their solutions and generates a latex worksheet.
 
         Returns nothing.
         '''
+        assert num_cols >= 1
         # Opening template
-        template = TEMPLATE 
+        if num_cols == 1:
+            template = TEMPLATE1COL
+        else:
+            template = TEMPLATE 
 
         # Formatting problems to fit into a latex enumerate environment
+
         question_str = ''
         solution_str = ''
         for p in self.problems:
-            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_question 
-            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % p.latex_solution 
+            q = self.make_line_breaks(p.latex_question, 200)
+            s = self.make_line_breaks(p.latex_solution, 200)
+            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % q 
+            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % s 
 
         # Creating author and title strings
         title_str = '\\chead{\\textbf{\\LARGE %s }}\n' % self.title
@@ -1965,8 +2104,8 @@ class Worksheet(ProblemContainer):
 
         # Subbing strings into template to make the worksheet. The template
         # should have 5 separate %s characters marking the locations of each
-        # of these substitutions in order.
-        worksheet = template % (title_str, author_str, self.message, question_str,
+        # of these substitutions in order, and a %d character for the number of columns
+        worksheet = template % (num_cols, title_str, author_str, self.message, question_str,
                 solution_str)
 
         # Saving worksheet
@@ -1992,6 +2131,18 @@ class Worksheet(ProblemContainer):
         # Saving worksheet name
         self.output_fn = worksheet_dir + '/' + output_pdf 
 
+    def make_line_breaks(self, string, num_char=70):
+        '''
+        Makes line breaks every num_char characters, returns formatted string.
+        '''
+        current_line_len = len(string)
+        break_loc = num_char - 1 
+        while current_line_len > num_char:
+            string = string[:break_loc] + '\\\\' + string[break_loc:]
+            break_loc += num_char 
+            current_line_len -= num_char 
+        return string
+
     def show(self):
         '''
         Uses default pdf viewer to display a filename.
@@ -2008,6 +2159,7 @@ TEMPLATE = '''
 \\documentclass[11pt]{article}
 
 \\usepackage{graphicx}
+\\usepackage{seqsplit}
 \\usepackage{caption}
 \\usepackage{subcaption}
 \\usepackage{float}
@@ -2026,17 +2178,18 @@ TEMPLATE = '''
 \\rfoot{Page \\thepage}
 \\begin{document}
 
+\\newcommand{\\numcols}{%d}
 \\lhead{}
 %s
 %s
 %s
-\\begin{multicols}{2}[\section*{Problems}]
+\\begin{multicols}{\\numcols{}}[\section*{Problems}]
 \\begin{enumerate}
 %s
 \\end{enumerate}
 \\end{multicols}
 \\newpage
-\\begin{multicols}{2}[\section*{Answers}]
+\\begin{multicols}{\\numcols{}}[\section*{Answers}]
 \\begin{enumerate}
 %s
 \\end{enumerate}
@@ -2045,6 +2198,46 @@ TEMPLATE = '''
 \\end{document}
 '''
 
+TEMPLATE1COL = '''
+\\documentclass[11pt]{article}
+
+\\usepackage{graphicx}
+\\usepackage{caption}
+\\usepackage{seqsplit}
+\\usepackage{subcaption}
+\\usepackage{float}
+\\usepackage{fancyhdr}
+\\usepackage[utf8]{inputenc}
+\\usepackage[english]{babel}
+\\usepackage{lastpage}
+\\usepackage{multicol}
+\\usepackage{blindtext}
+\\usepackage{amstext}
+
+
+\\pagestyle{fancy}
+\\fancyhf{}
+
+\\rfoot{Page \\thepage}
+\\begin{document}
+
+\\newcommand{\\numcols}{%d}
+\\lhead{}
+%s
+%s
+%s
+\section*{Problems}
+\\begin{enumerate}
+%s
+\\end{enumerate}
+\\newpage
+\section*{Answers}
+\\begin{enumerate}
+%s
+\\end{enumerate}
+
+\\end{document}
+'''
     
 
 
