@@ -896,16 +896,23 @@ class Generator:
         algebraic_terms = []
 
         # Making the terms
+        constant_term_exists = False # ensures there's only one constant term
+                                     # in the expression
         for o in range(order+1)[::-1]:
+            constant_term = True
             # Creating the terms with the highest order first
             term = Term(Rational(1, 1)) # the multiplicative identity
             if mixed_var:
                 for i in range(0, o):
                     term *= random.choice(variables)
+                    constant_term = False
             else:
                 variable = random.choice(variables)
                 for i in range(0, o):
                     term *= variable
+                    constant_term = False
+            if constant_term:
+                constant_term_exists = True
             algebraic_terms.append(term)
 
         # Adjusting algebraic terms to fit the size specified by num_terms
@@ -913,10 +920,10 @@ class Generator:
             # Adding more terms
             for i in range(num_terms - len(algebraic_terms)):
                 term = Term(Rational(1, 1))
-                if random.choice([True, False]) and order >= 1:
-                    random_order = random.randint(1, order)
+                if not constant_term_exists:
+                    random_order = random.randint(0, order)
                 else:
-                    random_order = 0
+                    random_order = random.randint(1, order)
                 if mixed_var:
                     for j in range(random_order):
                         term *= random.choice(variables)
@@ -925,6 +932,8 @@ class Generator:
                     for j in range(random_order):
                         term *= variable
                 algebraic_terms.append(term)
+                if random_order == 0:
+                    constant_term_exists = True
 
         while len(algebraic_terms) > num_terms:
             # Chopping terms off from the end.
