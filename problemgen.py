@@ -29,7 +29,7 @@ class Number:
     num           -   Number stored as an float, e.g. 42
     word            -   Number stored as a string, e.g. forty-two
     expanded        -   Number stored as a list of tuples of powers of self.base.
-                        428 would be stored as [(4, 2), (2, 1), (8, 0)] 
+                        428 would be stored as [(4, 2), (2, 1), (8, 0)]
                         (4 * 10^2 + 2 * 10^1 + 8 * 10^0)
     scientific      -   Number stored as scientific notation. Stored as a tuple,
                         e.g. (4.2, 1) to represent 42 = 4.2 * 10^1
@@ -44,7 +44,7 @@ class Number:
         base: base the number should be represented in (default 10)
         '''
         self.num = float(num)
-        self.base = 10 
+        self.base = 10
         self.word = self.make_word()
         self.expanded = self.make_expanded()
         self.scientific = self.make_scientific()
@@ -61,14 +61,14 @@ class Number:
     def make_expanded(self):
         '''
         Function to generate a new expanded form given self.num.
-        428 would be stored as [(4, 2), (2, 1), (8, 0)] 
+        428 would be stored as [(4, 2), (2, 1), (8, 0)]
         (4 * 10^2 + 2 * 10^1 + 8 * 10^0)
         '''
         left_of_point = []
         right_of_point = []
         str_num = str(self.num)
         if '.' in str_num:
-            # This float has components to the right and left of the 
+            # This float has components to the right and left of the
             # decimal point that need to be dealt with separately.
             str_left_of_point = str_num[:str_num.index('.')]
             str_right_of_point = str_num[str_num.index('.')+1:]
@@ -162,12 +162,12 @@ class Term:
 
 class Expression:
     '''
-    Object designed to combine a list of Terms into a single expression. 
+    Object designed to combine a list of Terms into a single expression.
 
     Member variables:
 
-    unreduced_terms :    A list of terms meant to combine in a manner 
-                        perserving their initial values, hence 
+    unreduced_terms :    A list of terms meant to combine in a manner
+                        perserving their initial values, hence
                         disallowing the usage of SymPy to automatically
                         combine them. Consider the usage of UnevaluatedExpr
                         when creating these terms.
@@ -175,8 +175,8 @@ class Expression:
                         hence SymPy can be used to combine them without
                         consequence.
     operations :        A list of the operations between the terms. The first
-                        operation in this list corresponds to the first and 
-                        second terms in either of the terms lists, and so 
+                        operation in this list corresponds to the first and
+                        second terms in either of the terms lists, and so
                         forth. These operations are restricted to +-*/.
     '''
 
@@ -215,7 +215,7 @@ class Expression:
         Reduces self.unreduced_terms and self.reduced_terms to lowest terms
         and reduces the operations list to ['', '']
         '''
-        unreduced_term = self.combine_terms(self.unreduced_terms, 
+        unreduced_term = self.combine_terms(self.unreduced_terms,
                 self.operations)
         reduced_term = self.combine_terms(self.reduced_terms,
                 self.operations)
@@ -225,7 +225,7 @@ class Expression:
 
     def get_sympy(self):
         '''
-        Returns the sympy term that represents the reduced version of the 
+        Returns the sympy term that represents the reduced version of the
         reduced terms.
         '''
         e = self.copy()
@@ -249,7 +249,7 @@ class Expression:
         Returns:
         A single Term
         '''
-        # Copying lists to avoid strange bugs 
+        # Copying lists to avoid strange bugs
         # hashtaghonestcomments hashtagthistookmeadaytofigureout
         terms = terms[:]
         ops = ops[:]
@@ -257,7 +257,7 @@ class Expression:
         assert len(ops) == len(terms) + 1
 
         #########################
-        # Base case, a single term 
+        # Base case, a single term
         if len(terms) == 1:
             return terms[0]
 
@@ -280,7 +280,7 @@ class Expression:
                 if distance > 0 and distance < closest_dist:
                     closest_dist = distance
                     closest_loc = r
-            # Now that the enclosed operation has been denoted, it can be 
+            # Now that the enclosed operation has been denoted, it can be
             # combined.
             new_ops = [''] + ops[left_most_locs[-1]+1:closest_loc] + ['']
             new_term = self.combine_terms(terms[left_most_locs[-1]:closest_loc], new_ops)
@@ -337,7 +337,7 @@ class Expression:
         if (mul_found and div_found and div_loc < mul_loc) or \
                 (div_found and not mul_found):
             # div is first
-            # deleting the division 
+            # deleting the division
             del ops[div_loc]
             # terms[div_loc] and terms[div_loc - 1] are the two terms being divided.
             # terms[div_loc] is replaced with the quotient of these two terms.
@@ -377,7 +377,7 @@ class Expression:
         if (sub_found and add_found and sub_loc < add_loc) or \
                 (sub_found and not add_found):
             # sub is first
-            # deleting the subtraction 
+            # deleting the subtraction
             del ops[sub_loc]
             # terms[sub_loc] and terms[sub_loc - 1] are the two terms being divided.
             # terms[sub_loc + 1] is replaced with the quotient of these two terms.
@@ -497,13 +497,13 @@ class Problem:
 
     def __init__(self, data):
         '''
-        Initializes the Problem. 
+        Initializes the Problem.
 
         Arguments:
 
-        data :      The Expression, Equation, System, or tuple intended to be 
+        data :      The Expression, Equation, System, or tuple intended to be
                     stored in the problem object.
-                    If data is a tuple, it should be in the form 
+                    If data is a tuple, it should be in the form
                     (latex_question, latex_solution, str_question, str_solution)
         '''
         self.latex_question = ''
@@ -599,7 +599,7 @@ class Problem:
             solutions = solve(lhs_term - rhs_term, e.variable)
         else:
             # This equation defines an inequality
-            solutions = solve_poly_inequality(Poly(lhs_term - rhs_term, 
+            solutions = solve_poly_inequality(Poly(lhs_term - rhs_term,
                 e.variable, domain='ZZ'), e.middle_sign)
 
         if len(solutions) == 0:
@@ -617,7 +617,7 @@ class Problem:
             # u220a is the element of symbol, u222a is the union symbol
             str_solution = str(e.variable) + ' \u220a '
             for s in solutions:
-               str_solution += str(s) + ' \u222a ' 
+               str_solution += str(s) + ' \u222a '
             str_solution = str_solution[:-3] # deleting last union symbol
 
         return str_solution
@@ -630,7 +630,7 @@ class Problem:
             solutions = solve(lhs_term - rhs_term, e.variable)
         else:
             # This equation defines an inequality
-            solutions = solve_poly_inequality(Poly(lhs_term - rhs_term, 
+            solutions = solve_poly_inequality(Poly(lhs_term - rhs_term,
                 e.variable, domain='ZZ'), e.middle_sign)
 
         if len(solutions) == 0:
@@ -648,7 +648,7 @@ class Problem:
             # u220a is the element of symbol, u222a is the union symbol
             latex_solution = latex(e.variable) + ' \\in '
             for s in solutions:
-               latex_solution += latex(s) + ' \\cup ' 
+               latex_solution += latex(s) + ' \\cup '
             latex_solution = latex_solution[:-6] # deleting last union symbol
         if latex_solution == '':
             return '\\text{ No solution }'
@@ -735,13 +735,13 @@ class Problem:
 
 class Generator:
     '''
-    This object is designed to create Expressions representing different 
+    This object is designed to create Expressions representing different
     kinds of mathematical problems, and compile them into a list to be
     printed (typically as a latex document).
 
     Member variables:
 
-    problem_list -      a list of Problems designed to maintain 
+    problem_list -      a list of Problems designed to maintain
                         every problem generated through one of the member
                         functions.
     worksheet_fn -      the name of the pdf document for the generated
@@ -763,13 +763,13 @@ class Generator:
         symbols     -   a string containing the variables that
                         should be used.
         leading_coeff   -   Set to true to have a leading coeff
-                            for the binomial terms that is 
+                            for the binomial terms that is
                             greater than 0.
         factor_order    -   order of the binominal terms
         len_factor      -   length of individual factors, default 2.
 
-        Returns an expression where the expanded form is in the 
-        reduced terms, and the factored expression is stored in the 
+        Returns an expression where the expanded form is in the
+        reduced terms, and the factored expression is stored in the
         unreduced terms.
         '''
         # Generating factors
@@ -782,7 +782,7 @@ class Generator:
         # Multiplying factors
         for f in factors:
             f.simplify()
-        expr = factors[0]        
+        expr = factors[0]
         for i in range(1, len(factors)):
             expr = expr * factors[i]
         expr.simplify()
@@ -798,7 +798,7 @@ class Generator:
             mixed_var=False, max_lowest_term=10, middle_sign='=',
             max_multiple=1, same_base_root=True):
         '''
-        Generates an Equation involving denoted variables to the order 
+        Generates an Equation involving denoted variables to the order
         specified.
 
         num_lhs_terms   -   Number of terms on the left hand side of the
@@ -807,7 +807,7 @@ class Generator:
                             equation. Default 1.
         types           -   Types of coefficients. 'i' -> Integers,
                             'f' -> fractions, 'r' -> square roots.
-        order_lhs       -   Order of the left hand side expression. 
+        order_lhs       -   Order of the left hand side expression.
                             Default 1
         order_rhs       -   Order of the right hand side expression.
                             Default 0.
@@ -840,15 +840,15 @@ class Generator:
                 mixed_var=mixed_var, max_lowest_term=max_lowest_term,
                 max_multiple=max_multiple, same_base_root=same_base_root)
         rhs_expr = self.gen_algebraic_expression(num_terms=num_rhs_terms,
-                types=types, symbols=symbols, order=order_rhs, coeff=rhs_coeff, 
+                types=types, symbols=symbols, order=order_rhs, coeff=rhs_coeff,
                 mixed_var=mixed_var, max_lowest_term=max_lowest_term,
                 max_multiple=max_multiple, same_base_root=same_base_root)
-        equation = Equation(lhs_expr, rhs_expr, middle_sign=middle_sign, 
+        equation = Equation(lhs_expr, rhs_expr, middle_sign=middle_sign,
                 variable=variable)
         return equation
 
     def gen_algebraic_expression(self, num_terms=2, types='i',
-            symbols='x', order=1, mixed_var=False, coeff=[], 
+            symbols='x', order=1, mixed_var=False, coeff=[],
             max_lowest_term=10, max_multiple=1, same_base_root=True):
         '''
         Generates an Expression involving denoted variables to the order
@@ -856,30 +856,30 @@ class Generator:
 
         Arguments:
 
-        num_terms       -   the number of terms in the Expression. 
+        num_terms       -   the number of terms in the Expression.
                             Default 2.
         types           -   The types of coefficients allowed to appear.
                             This is expresssed as a string, containing only
                             the characters 'i' (positive integers), 'r'
                             (square roots), and/or 'f' (fractions).
                             Default 'i'.
-        symbols         -   A string listing the variables to be used in the 
+        symbols         -   A string listing the variables to be used in the
                             expression. Must be single character variables.
                             Default 'x'.
         order           -   The order of the expression to be generated.
                             Default 1.
-        mixed_var       -   Denotes if the expression should mix different 
+        mixed_var       -   Denotes if the expression should mix different
                             variables together (within the bounds of the order)
                             or not.
         coeff           -   A list containing coefficients to be used in creating
-                            the expression. They should be in order from highest 
+                            the expression. They should be in order from highest
                             order to lowest order
         max_lowest_term -   the largest number that can appear in the reduced
                             expression. (Of course, larger numbers may appear due
                             to the operations being done.)
         max_multiple    -   the maximum multiplier used in the creation of fractions
                             and radicals.
-        same_base_root  -   bool determining if all radicals in the expression 
+        same_base_root  -   bool determining if all radicals in the expression
                             should reduce to the same base root.
         '''
         assert order >= 0
@@ -898,22 +898,25 @@ class Generator:
         # Making the terms
         for o in range(order+1)[::-1]:
             # Creating the terms with the highest order first
-            term = Term(Rational(1, 1)) # the multiplicative identity 
+            term = Term(Rational(1, 1)) # the multiplicative identity
             if mixed_var:
                 for i in range(0, o):
                     term *= random.choice(variables)
             else:
                 variable = random.choice(variables)
                 for i in range(0, o):
-                    term *= variable 
+                    term *= variable
             algebraic_terms.append(term)
 
         # Adjusting algebraic terms to fit the size specified by num_terms
         if len(algebraic_terms) < num_terms:
             # Adding more terms
             for i in range(num_terms - len(algebraic_terms)):
-                term = Term(Rational(1, 1)) 
-                random_order = random.randint(0, order)
+                term = Term(Rational(1, 1))
+                if random.choice([True, False]) and order >= 1:
+                    random_order = random.randint(1, order)
+                else:
+                    random_order = 0
                 if mixed_var:
                     for j in range(random_order):
                         term *= random.choice(variables)
@@ -932,9 +935,9 @@ class Generator:
         assert len(algebraic_terms) == num_terms
 
         if len(coeff) is 0:
-            # Generating numeric expression 
-            expression = self.gen_numerical_expression(num_terms, 
-                    types=types, max_lowest_term=max_lowest_term, 
+            # Generating numeric expression
+            expression = self.gen_numerical_expression(num_terms,
+                    types=types, max_lowest_term=max_lowest_term,
                     max_multiple=max_multiple, same_base_root=same_base_root)
             # Combining algebraic terms into expression
             for i in range(num_terms):
@@ -953,7 +956,7 @@ class Generator:
             # Removing zero terms
             expression.zero_clean()
 
-        return expression  
+        return expression
 
     def gen_num_conv(self, q_type='num', s_type='word', types='i',
             lower_num_bound=1, upper_num_bound=1e9):
@@ -964,18 +967,18 @@ class Generator:
 
         Arguments:
         q_type      -   Type of number to be converted from. Should be 'num'
-                        (for a decimal print out), 'word' (for a phrase 
+                        (for a decimal print out), 'word' (for a phrase
                         representing the number), 'expand' (for expanded form),
                         'sci' (for scientific form).
         s_type      -   Type of number to be converted to. Should be 'num'
-                        (for a decimal print out), 'word' (for a phrase 
+                        (for a decimal print out), 'word' (for a phrase
                         representing the number), 'expand' (for expanded form),
                         'sci' (for scientific form).
         types       -   Determines if the number should be an integer, decimal,
                         etc. should be 'i' for integers, 'd' for decimals.
         lower_num_bound     -   Lower bound of number generated
         upper_num_bound     -   Upper bound of number generated
-        
+
         Returns a Problem of the given specifications.
         '''
         assert type(q_type) == str
@@ -1003,7 +1006,7 @@ class Generator:
             latex_solution = ''
             for pair in number.expanded:
                 str_solution += '%d * %d**%d + ' % (pair[0], number.base, pair[1])
-                latex_solution += '%d \\cdot %d^{%d} + ' % (pair[0], 
+                latex_solution += '%d \\cdot %d^{%d} + ' % (pair[0],
                         number.base, pair[1])
             # Removing extra ' + '
             str_solution = str_solution[:-3]
@@ -1017,8 +1020,8 @@ class Generator:
             conv_to = 'scientific form'
         # Setting question based upon argument
         if q_type == 'num':
-            str_question = str(number.num) 
-            latex_question = str(number.num) 
+            str_question = str(number.num)
+            latex_question = str(number.num)
             str_question += '->(' + conv_to + ')'
             latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
         elif q_type == 'word':
@@ -1031,7 +1034,7 @@ class Generator:
             latex_question = ''
             for pair in number.expanded:
                 str_question += '%d * %d**%d + ' % (pair[0], number.base, pair[1])
-                latex_question += '%d \\cdot %d^{%d} + ' % (pair[0], 
+                latex_question += '%d \\cdot %d^{%d} + ' % (pair[0],
                         number.base, pair[1])
             # Removing extra ' + '
             str_question = str_question[:-3]
@@ -1045,7 +1048,7 @@ class Generator:
                     number.scientific[1])
             str_question += '->(' + conv_to + ')'
             latex_question += '\\rightarrow\\text{(' + conv_to + ')}'
-        return Problem((latex_question, latex_solution, str_question, 
+        return Problem((latex_question, latex_solution, str_question,
             str_solution))
 
     def gen_numerical_expression(self, num_terms=2, op='+-', types='i',
@@ -1060,11 +1063,11 @@ class Generator:
         num_terms   -   the number of terms in the Expression. Default 2.
         op          -   a string expressing which operations should be used.
                         String should only contain the characters +, -, *, ^, or
-                        /. For example, the string '+/' would indicate the 
+                        /. For example, the string '+/' would indicate the
                         problem should include addition and/or division.
                         Default '+-'.
         types       -   The types of numbers that should be allowed to appear.
-                        This is expressed as a string, containing only the 
+                        This is expressed as a string, containing only the
                         characters 'i' (positive integers), 'r' (square roots),
                         'f' (fractions).
                         Default 'i'.
@@ -1076,7 +1079,7 @@ class Generator:
                     -   the maximum multiplier used in the creation of fractions
                         and radicals.
         same_base_root
-                    -   bool determining if all radicals in the expression 
+                    -   bool determining if all radicals in the expression
                         should reduce to the same base root.
 
         Returns an Expression.
@@ -1088,7 +1091,7 @@ class Generator:
         assert 'i' in types or 'r' in types or 'f' in types
 
         # Generating list of perfect squares for use as multipliers
-        perfect_squares = [x**2 for x in range(1, 
+        perfect_squares = [x**2 for x in range(1,
             int(m.sqrt(max_multiple)) + 1)]
 
         # Generating terms in the expression
@@ -1124,7 +1127,7 @@ class Generator:
                 # Generating integer
                 terms.append(Term(constants[0]))
                 reduced_terms.append(Term(constants[0]))
-            elif type_of_num is 'r': 
+            elif type_of_num is 'r':
                 # UnevaluatedExpr has to be used here so the term isn't fully
                 # reduced
                 terms.append(Term(constants[0] * \
@@ -1133,12 +1136,12 @@ class Generator:
                         sqrt(constants[2] * base_root)))
             elif type_of_num is 'f':
                 # Mul is used in this way so the fraction doesn't reduce
-                terms.append(Term(Mul(constants[0] * constants[3], 
+                terms.append(Term(Mul(constants[0] * constants[3],
                     Rational(1, constants[1] * constants[3]), evaluate=False)))
-                reduced_terms.append(Term(Rational(constants[0]*constants[3], 
+                reduced_terms.append(Term(Rational(constants[0]*constants[3],
                     constants[1]*constants[3])))
             operations.append(random.choice(op))
-        # Deleting the last operation in the operations list, since it's 
+        # Deleting the last operation in the operations list, since it's
         # unnecessary
         del operations[-1]
         # Replacing it with a null character
@@ -1187,7 +1190,7 @@ class Generator:
         '''
         assert order_lhs == 0 or order_lhs == 1
         assert order_rhs == 0 or order_rhs == 1
-        equation = self.gen_equation(num_lhs_terms=num_lhs_terms, 
+        equation = self.gen_equation(num_lhs_terms=num_lhs_terms,
                 num_rhs_terms=num_rhs_terms, types=types,
                 symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs,
                 lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
@@ -1227,7 +1230,7 @@ class Generator:
             # this is b^2
             b2 = random.choice(perfect_squares)
             # this is -4ac
-            product = (discrim - b2) 
+            product = (discrim - b2)
             if product % 4 != 0:
                 # discrim is not a perfect square, so multiplying it
                 # by 4 can't make it a perfect square
@@ -1247,8 +1250,8 @@ class Generator:
                 del ac_choices[ac_choices.index(a)]
             # Rememeber product is -4ac, not just ac
             c = int(random.choice(ac_choices) / (-4))
-            # divisors returns all positive numbers regardless of the 
-            # input. If product (-4ac) is negative, a and c must have same 
+            # divisors returns all positive numbers regardless of the
+            # input. If product (-4ac) is negative, a and c must have same
             # signs.
             if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
                 c *= -1
@@ -1286,8 +1289,8 @@ class Generator:
                 del ac_choices[ac_choices.index(a)]
             # Rememeber product is -4ac, not just ac
             c = random.choice(ac_choices) / (-4)
-            # divisors returns all positive numbers regardless of the 
-            # input. If product (-4ac) is negative, a and c must have same 
+            # divisors returns all positive numbers regardless of the
+            # input. If product (-4ac) is negative, a and c must have same
             # signs.
             if product < 0 and ((a < 0 and c > 0) or (a > 0 and c < 0)):
                 c *= -1
@@ -1327,7 +1330,7 @@ class Generator:
         Returns Problem.
         '''
         # Generating Expression
-        expression = self.gen_numerical_expression(num_terms=1, types='f', 
+        expression = self.gen_numerical_expression(num_terms=1, types='f',
                 max_lowest_term=max_lowest_term, max_multiple=max_multiple)
         # turning expression into problem
         problem = Problem(expression)
@@ -1353,7 +1356,7 @@ class Generator:
         Returns Problem.
         '''
         # Generating Expression
-        expression = self.gen_numerical_expression(num_terms=1, types='f', 
+        expression = self.gen_numerical_expression(num_terms=1, types='f',
                 max_lowest_term=max_lowest_term, max_multiple=max_multiple)
         # turning expression into problem
         problem = Problem(expression)
@@ -1362,12 +1365,12 @@ class Generator:
         # Formatting into Latex
         question = '%.5f' % decimal
         # Substituting latex expression into problem
-        problem.latex_question = question 
+        problem.latex_question = question
 
         return problem
 
     # TODO: decrease the rates of problems generated without solutions
-    def gen_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1, 
+    def gen_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1,
             types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
             rhs_coeff=[], mixed_var=False, max_lowest_term=10, middle_sign='=',
             max_multiple=1, same_base_root=True):
@@ -1384,7 +1387,7 @@ class Generator:
                             equation. Default 1.
         types           -   Types of coefficients. 'i' -> Integers,
                             'f' -> fractions, 'r' -> square roots.
-        order_lhs       -   Order of the left hand side expression. 
+        order_lhs       -   Order of the left hand side expression.
                             Default 1
         order_rhs       -   Order of the right hand side expression.
                             Default 0.
@@ -1426,7 +1429,7 @@ class Generator:
                 max_lowest_term=max_lowest_term, middle_sign=middle_sign,
                 max_multiple=max_multiple, same_base_root=same_base_root,
                 variable=variable))
-        return System(equations) 
+        return System(equations)
 
 ################################### Error classes
 class Error(Exception):
@@ -1470,7 +1473,7 @@ class ProblemContainer:
         for p in self.problems:
             problems_str += str(self.problems.index(p)) + '. ' + str(p) + '\n'
         return problems_str
-        
+
     def clear_problems(self):
         '''
         Resets all problems.
@@ -1498,7 +1501,7 @@ class ProblemContainer:
         return True
 
     def add_algebraic_expression(self, num_terms=2, types='i',
-            symbols='x', order=1, mixed_var=False, coeff=[], 
+            symbols='x', order=1, mixed_var=False, coeff=[],
             max_lowest_term=10, max_multiple=1, same_base_root=True):
         '''
         Adds a generic algebraic expression (involving denoted variables to the order
@@ -1506,30 +1509,30 @@ class ProblemContainer:
 
         Arguments:
 
-        num_terms       -   the number of terms in the Expression. 
+        num_terms       -   the number of terms in the Expression.
                             Default 2.
         types           -   The types of coefficients allowed to appear.
                             This is expresssed as a string, containing only
                             the characters 'i' (positive integers), 'r'
                             (square roots), and/or 'f' (fractions).
                             Default 'i'.
-        symbols         -   A string listing the variables to be used in the 
+        symbols         -   A string listing the variables to be used in the
                             expression. Must be single character variables.
                             Default 'x'.
         order           -   The order of the expression to be generated.
                             Default 1.
-        mixed_var       -   Denotes if the expression should mix different 
+        mixed_var       -   Denotes if the expression should mix different
                             variables together (within the bounds of the order)
                             or not.
         coeff           -   A list containing coefficients to be used in creating
-                            the expression. They should be in order from highest 
+                            the expression. They should be in order from highest
                             order to lowest order
         max_lowest_term -   the largest number that can appear in the reduced
                             expression. (Of course, larger numbers may appear due
                             to the operations being done.)
         max_multiple    -   the maximum multiplier used in the creation of fractions
                             and radicals.
-        same_base_root  -   bool determining if all radicals in the expression 
+        same_base_root  -   bool determining if all radicals in the expression
                             should reduce to the same base root.
         '''
 
@@ -1537,7 +1540,7 @@ class ProblemContainer:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
                 expr = self.gen.gen_algebraic_expression(num_terms=num_terms, types=types,
-                        symbols=symbols, order=order, mixed_var=mixed_var, coeff=coeff, 
+                        symbols=symbols, order=order, mixed_var=mixed_var, coeff=coeff,
                         max_lowest_term=max_lowest_term, max_multiple=max_multiple, same_base_root=same_base_root)
                 # Attempting to add it
                 if self.add_problem(Problem(expr)):
@@ -1546,7 +1549,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('algebraic', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1562,18 +1565,18 @@ class ProblemContainer:
 
         Arguments:
         q_type      -   Type of number to be converted from. Should be 'num'
-                        (for a decimal print out), 'word' (for a phrase 
+                        (for a decimal print out), 'word' (for a phrase
                         representing the number), 'expand' (for expanded form),
                         'sci' (for scientific form).
         s_type      -   Type of number to be converted to. Should be 'num'
-                        (for a decimal print out), 'word' (for a phrase 
+                        (for a decimal print out), 'word' (for a phrase
                         representing the number), 'expand' (for expanded form),
                         'sci' (for scientific form).
         types       -   Determines if the number should be an integer, decimal,
                         etc. should be 'i' for integers, 'd' for decimals.
         lower_num_bound     -   Lower bound of number generated
         upper_num_bound     -   Upper bound of number generated
-        
+
         '''
         try:
             for i in range(self.NUM_ATTEMPTS):
@@ -1588,7 +1591,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('num_conv', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1619,7 +1622,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('dec_to_frac', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1652,7 +1655,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('frac_to_dec', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1665,7 +1668,7 @@ class ProblemContainer:
             mixed_var=False, max_lowest_term=10, middle_sign='=',
             max_multiple=1, same_base_root=True):
         '''
-        Adds an equation involving denoted variables to the order 
+        Adds an equation involving denoted variables to the order
         specified (as a Problem).
 
         num_lhs_terms   -   Number of terms on the left hand side of the
@@ -1674,7 +1677,7 @@ class ProblemContainer:
                             equation. Default 1.
         types           -   Types of coefficients. 'i' -> Integers,
                             'f' -> fractions, 'r' -> square roots.
-        order_lhs       -   Order of the left hand side expression. 
+        order_lhs       -   Order of the left hand side expression.
                             Default 1
         order_rhs       -   Order of the right hand side expression.
                             Default 0.
@@ -1703,9 +1706,9 @@ class ProblemContainer:
         try:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
-                eq = self.gen.gen_equation(num_lhs_terms=num_lhs_terms, 
+                eq = self.gen.gen_equation(num_lhs_terms=num_lhs_terms,
                         num_rhs_terms=num_rhs_terms, types=types,
-                        symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs, 
+                        symbols=symbols, order_lhs=order_lhs, order_rhs=order_rhs,
                         lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
                         mixed_var=mixed_var, max_lowest_term=max_lowest_term,
                         middle_sign=middle_sign, max_multiple=max_multiple,
@@ -1717,7 +1720,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('generic_equation', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1737,7 +1740,7 @@ class ProblemContainer:
         symbols     -   a string containing the variables that
                         should be used.
         leading_coeff   -   Set to true to have a leading coeff
-                            for the binomial terms that is 
+                            for the binomial terms that is
                             greater than 0.
 
         Returns a tuple of expressions. The first expression is still
@@ -1757,7 +1760,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('factorable', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1776,7 +1779,7 @@ class ProblemContainer:
         symbols     -   a string containing the variables that
                         should be used.
         leading_coeff   -   Set to true to have a leading coeff
-                            for the binomial terms that is 
+                            for the binomial terms that is
                             greater than 0.
 
         Returns a tuple of expressions. The first expression is still
@@ -1801,7 +1804,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('expandable', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1850,12 +1853,12 @@ class ProblemContainer:
         try:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
-                eq = self.gen.gen_linear(max_lowest_term=max_lowest_term, 
+                eq = self.gen.gen_linear(max_lowest_term=max_lowest_term,
                         max_multiple=max_multiple, types=types,
                         num_lhs_terms=num_lhs_terms, num_rhs_terms=num_rhs_terms,
                         lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
                         middle_sign=middle_sign, mixed_var=mixed_var,
-                        symbols=symbols, same_base_root=same_base_root, 
+                        symbols=symbols, same_base_root=same_base_root,
                         order_lhs=order_lhs, order_rhs=order_rhs)
                 # Attempting to add it
                 if self.add_problem(Problem(eq)):
@@ -1864,7 +1867,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('linear', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1883,11 +1886,11 @@ class ProblemContainer:
         num_terms   -   the number of terms in the Expression. Default 2.
         op          -   a string expressing which operations should be used.
                         String should only contain the characters +, -, *, ^, or
-                        /. For example, the string '+/' would indicate the 
+                        /. For example, the string '+/' would indicate the
                         problem should include addition and/or division.
                         Default '+-'.
         types       -   The types of numbers that should be allowed to appear.
-                        This is expressed as a string, containing only the 
+                        This is expressed as a string, containing only the
                         characters 'i' (positive integers), 'r' (square roots),
                         'f' (fractions).
                         Default 'i'.
@@ -1899,7 +1902,7 @@ class ProblemContainer:
                     -   the maximum multiplier used in the creation of fractions
                         and radicals.
         same_base_root
-                    -   bool determining if all radicals in the expression 
+                    -   bool determining if all radicals in the expression
                         should reduce to the same base root.
 
         Returns an Expression.
@@ -1918,7 +1921,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('numerical', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1926,7 +1929,7 @@ class ProblemContainer:
             PrintException()
 
     # coeffs are generated like max_lowest_term^2, not like max_lowest_term
-    # TODO: bug 
+    # TODO: bug
     def add_quadratic(self, max_lowest_term=4, factorable=True,
             solvable=True, leading_coeff=False, middle_sign='='):
         '''
@@ -1949,7 +1952,7 @@ class ProblemContainer:
             for i in range(self.NUM_ATTEMPTS):
                 # Generating expression
                 eq = self.gen.gen_quadratic(max_lowest_term=max_lowest_term,
-                        factorable=factorable, solvable=solvable, 
+                        factorable=factorable, solvable=solvable,
                         leading_coeff=leading_coeff, middle_sign=middle_sign)
                 # Attempting to add it
                 if self.add_problem(Problem(eq)):
@@ -1958,7 +1961,7 @@ class ProblemContainer:
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
             raise GeneratorError('quadratic', 'Unable to generate additional ' +
-                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' + 
+                    'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
         except GeneratorError as e:
             print('GeneratorError: %s' % e.message)
@@ -1982,7 +1985,7 @@ class ProblemContainer:
                             equation. Default 1.
         types           -   Types of coefficients. 'i' -> Integers,
                             'f' -> fractions, 'r' -> square roots.
-        order_lhs       -   Order of the left hand side expression. 
+        order_lhs       -   Order of the left hand side expression.
                             Default 1
         order_rhs       -   Order of the right hand side expression.
                             Default 0.
@@ -2017,7 +2020,7 @@ class ProblemContainer:
                         num_lhs_terms=num_lhs_terms, num_rhs_terms=num_rhs_terms,
                         types=types, symbols=symbols, order_lhs=order_lhs,
                         order_rhs=order_rhs, lhs_coeff=lhs_coeff, rhs_coeff=rhs_coeff,
-                        mixed_var=mixed_var, max_lowest_term=max_lowest_term, 
+                        mixed_var=mixed_var, max_lowest_term=max_lowest_term,
                         middle_sign=middle_sign, max_multiple=max_multiple,
                         same_base_root=same_base_root)
                 # Attempting to add it
@@ -2074,9 +2077,9 @@ class Worksheet(ProblemContainer):
         self.message = message
 
     # TODO: improve line break errors for fields in \text{}
-    def make(self, num_cols=2):  
+    def make(self, num_cols=2):
         '''
-        Takes a predefined latex template, an author, a title, and a list of 
+        Takes a predefined latex template, an author, a title, and a list of
         problems with their solutions and generates a latex worksheet.
 
         Returns nothing.
@@ -2086,7 +2089,7 @@ class Worksheet(ProblemContainer):
         if num_cols == 1:
             template = TEMPLATE1COL
         else:
-            template = TEMPLATE 
+            template = TEMPLATE
 
         # Formatting problems to fit into a latex enumerate environment
 
@@ -2095,8 +2098,8 @@ class Worksheet(ProblemContainer):
         for p in self.problems:
             q = self.make_line_breaks(p.latex_question, 200)
             s = self.make_line_breaks(p.latex_solution, 200)
-            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % q 
-            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % s 
+            question_str += '\\item $ %s $\n \\vspace{10mm}\n' % q
+            solution_str += '\\item $ %s $\n \\vspace{10mm}\n' % s
 
         # Creating author and title strings
         title_str = '\\chead{\\textbf{\\LARGE %s }}\n' % self.title
@@ -2115,7 +2118,7 @@ class Worksheet(ProblemContainer):
 
         # Compiling worksheet
         os.system("pdflatex %s" % self.worksheet_fn)
-        
+
         # Cleaning files and organizing
         os.system("rm *.aux *.log")
         worksheet_dir = 'worksheets'
@@ -2129,18 +2132,18 @@ class Worksheet(ProblemContainer):
         os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
 
         # Saving worksheet name
-        self.output_fn = worksheet_dir + '/' + output_pdf 
+        self.output_fn = worksheet_dir + '/' + output_pdf
 
     def make_line_breaks(self, string, num_char=70):
         '''
         Makes line breaks every num_char characters, returns formatted string.
         '''
         current_line_len = len(string)
-        break_loc = num_char - 1 
+        break_loc = num_char - 1
         while current_line_len > num_char:
             string = string[:break_loc] + '\\\\' + string[break_loc:]
-            break_loc += num_char 
-            current_line_len -= num_char 
+            break_loc += num_char
+            current_line_len -= num_char
         return string
 
     def show(self):
@@ -2238,6 +2241,3 @@ TEMPLATE1COL = '''
 
 \\end{document}
 '''
-    
-
-
