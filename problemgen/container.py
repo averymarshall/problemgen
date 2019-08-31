@@ -1,4 +1,7 @@
-import backend
+import problemgen.backend as backend
+import random
+import os
+import subprocess
 
 # Add problem container with all of the add methods and a problem list
 # have worksheet be a child class
@@ -95,18 +98,18 @@ class ProblemContainer:
                         symbols=symbols, order=order, mixed_var=mixed_var, coeff=coeff,
                         max_lowest_term=max_lowest_term, max_multiple=max_multiple, same_base_root=same_base_root)
                 # Attempting to add it
-                if self.add_problem(Problem(expr)):
+                if self.add_problem(backend.Problem(expr)):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('algebraic', 'Unable to generate additional ' +
+            raise backend.GeneratorError('algebraic', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     def add_num_conv(self, q_type='num', s_type='word', types='i',
             lower_num_bound=1, upper_num_bound=1e9):
@@ -142,13 +145,13 @@ class ProblemContainer:
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('num_conv', 'Unable to generate additional ' +
+            raise backend.GeneratorError('num_conv', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
     def add_dec_to_frac(self, max_lowest_term=10, max_multiple=1):
         '''
         Adds a Problem for converting decimals to fractions.
@@ -173,13 +176,13 @@ class ProblemContainer:
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('dec_to_frac', 'Unable to generate additional ' +
+            raise backend.GeneratorError('dec_to_frac', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     # Fix bug for repeating decimals being truncated
     def add_frac_to_dec(self, max_lowest_term=10, max_multiple=1):
@@ -206,13 +209,13 @@ class ProblemContainer:
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('frac_to_dec', 'Unable to generate additional ' +
+            raise backend.GeneratorError('frac_to_dec', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     def add_equation(self, num_lhs_terms=2, num_rhs_terms=1, types='i',
             symbols='x', order_lhs=1, order_rhs=0, lhs_coeff=[],
@@ -266,18 +269,18 @@ class ProblemContainer:
                         middle_sign=middle_sign, max_multiple=max_multiple,
                         same_base_root=same_base_root)
                 # Attempting to add it
-                if self.add_problem(Problem(eq)):
+                if self.add_problem(backend.Problem(eq)):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('generic_equation', 'Unable to generate additional ' +
+            raise backend.GeneratorError('generic_equation', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
 
     def add_factorable_expression(self, order=2, max_lowest_term=10, factor_order=1,
@@ -304,20 +307,20 @@ class ProblemContainer:
                 # Generating expression
                 expr = self.gen.gen_factorable_expression(factor_order=factor_order, order=order, leading_coeff=leading_coeff,
                         max_lowest_term=max_lowest_term, symbols=symbols, mixed_var=mixed_var, len_factor=len_factor)
-                prob = Problem(expr)
+                prob = backend.Problem(expr)
                 # Attempting to add it
                 if self.add_problem(prob):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('factorable', 'Unable to generate additional ' +
+            raise backend.GeneratorError('factorable', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
 # TODO: Sometimes this generates monomials, strange behavior
     def add_expandable_expression(self, order=2, max_lowest_term=10, factor_order=1,
@@ -349,20 +352,20 @@ class ProblemContainer:
                 expr.unreduced_terms = expr.reduced_terms
                 expr.reduced_terms = temp
                 # Setting up problem
-                prob = Problem(expr)
+                prob = backend.Problem(expr)
                 # Attempting to add it
                 if self.add_problem(prob):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('expandable', 'Unable to generate additional ' +
+            raise backend.GeneratorError('expandable', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     def add_linear(self, max_lowest_term=10, max_multiple=1, types='i',
             num_lhs_terms=2, num_rhs_terms=1, lhs_coeff=[], rhs_coeff=[],
@@ -414,18 +417,18 @@ class ProblemContainer:
                         symbols=symbols, same_base_root=same_base_root,
                         order_lhs=order_lhs, order_rhs=order_rhs)
                 # Attempting to add it
-                if self.add_problem(Problem(eq)):
+                if self.add_problem(backend.Problem(eq)):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('linear', 'Unable to generate additional ' +
+            raise backend.GeneratorError('linear', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     def add_numerical_expression(self, num_terms=2, op='+-', types='i',
             max_lowest_term=10, max_multiple=1, same_base_root=True):
@@ -468,18 +471,18 @@ class ProblemContainer:
                         op=op, types=types, max_lowest_term=max_lowest_term,
                         max_multiple=max_mulitple, same_base_root=same_base_root)
                 # Attempting to add it
-                if self.add_problem(Problem(expr)):
+                if self.add_problem(backend.Problem(expr)):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('numerical', 'Unable to generate additional ' +
+            raise backend.GeneratorError('numerical', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     # coeffs are generated like max_lowest_term^2, not like max_lowest_term
     # TODO: bug
@@ -508,18 +511,18 @@ class ProblemContainer:
                         factorable=factorable, solvable=solvable,
                         leading_coeff=leading_coeff, middle_sign=middle_sign)
                 # Attempting to add it
-                if self.add_problem(Problem(eq)):
+                if self.add_problem(backend.Problem(eq)):
                     return
                 # Problem was a dupe, looping back
             # All of the problems generated were dupes, there likely aren't many unique
             # problems for the parameters given
-            raise GeneratorError('quadratic', 'Unable to generate additional ' +
+            raise backend.GeneratorError('quadratic', 'Unable to generate additional ' +
                     'unique problems after trying ' + str(self.NUM_ATTEMPTS) + ' times.' +
                     'Your input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
     def add_system(self, num_equations=2, num_lhs_terms=2, num_rhs_terms=1,
             types='i', symbols='xy', order_lhs=1, order_rhs=0, lhs_coeff=[],
@@ -577,18 +580,18 @@ class ProblemContainer:
                         middle_sign=middle_sign, max_multiple=max_multiple,
                         same_base_root=same_base_root)
                 # Attempting to add it
-                if self.add_problem(Problem(syst)):
+                if self.add_problem(backend.Problem(syst)):
                     return
                 # Problem was a dupe, looping back
                 # All of the problems generated were dupes, likely aren't many unique
                 # problems for the parameters given
-                raise GeneratorError('system', 'Unable to generate additional ' +
+                raise backend.GeneratorError('system', 'Unable to generate additional ' +
                         'unique problems after trying ' + str(self.NUM_ATTEMPTS) +
                         ' times.' + 'Input parameters may be too restrictive.')
-        except GeneratorError as e:
+        except backend.GeneratorError as e:
             print('GeneratorError: %s' % e.message)
         except:
-            PrintException()
+            backend.PrintException()
 
 class Worksheet(ProblemContainer):
     '''
@@ -631,6 +634,7 @@ class Worksheet(ProblemContainer):
         self.message = message
 
     # TODO: improve line break errors for fields in \text{}
+    # TODO: Use PyLatex to avoid external dependencies
     def make(self, num_cols=2, separate_answers=True):
         '''
         Takes a predefined latex template, an author, a title, and a list of
@@ -676,19 +680,23 @@ class Worksheet(ProblemContainer):
         worksheet_file.close()
 
         # Compiling worksheet
-        os.system("pdflatex %s" % filename)
-
-        # Cleaning files and organizing
-        os.system("rm *.aux *.log")
-        worksheet_dir = 'worksheets'
-        tex_dir = 'tex'
-        if not os.path.exists(worksheet_dir):
-            os.makedirs(worksheet_dir)
-        if not os.path.exists(tex_dir):
-            os.makedirs(tex_dir)
-        os.system("mv " + filename + ' ' +  tex_dir + '/' + filename)
-        output_pdf = filename.replace('.tex', '.pdf')
-        os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
+        try:
+            subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
+            # os.system("pdflatex %s" % filename) 
+            # Cleaning files and organizing
+            os.system("rm *.aux *.log")
+            worksheet_dir = 'worksheets'
+            tex_dir = 'tex'
+            if not os.path.exists(worksheet_dir):
+                os.makedirs(worksheet_dir)
+            if not os.path.exists(tex_dir):
+                os.makedirs(tex_dir)
+            os.system("mv " + filename + ' ' +  tex_dir + '/' + filename)
+            output_pdf = filename.replace('.tex', '.pdf')
+            os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
+        except (OSError, IOError, subprocess.CalledProcessError) as e:
+            print e
+            
 
         # Saving worksheet name
         self.output_fn = worksheet_dir + '/' + output_pdf
@@ -704,22 +712,25 @@ class Worksheet(ProblemContainer):
             worksheet_file.write(worksheet)
             worksheet_file.close()
 
-            # Compiling worksheet
-            os.system("pdflatex %s" % (filename))
-
-            # Cleaning files and organizing
-            os.system("rm *.aux *.log")
-            worksheet_dir = 'worksheets'
-            tex_dir = 'tex'
-            if not os.path.exists(worksheet_dir):
-                os.makedirs(worksheet_dir)
-            if not os.path.exists(tex_dir):
-                os.makedirs(tex_dir)
-            os.system("mv " + filename + ' ' +  tex_dir + '/' + filename)
-            output_pdf = filename.replace('.tex', '.pdf')
-            os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
+            try:
+                subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
+                # os.system("pdflatex %s" % filename) 
+                # Cleaning files and organizing
+                os.system("rm *.aux *.log")
+                worksheet_dir = 'worksheets'
+                tex_dir = 'tex'
+                if not os.path.exists(worksheet_dir):
+                    os.makedirs(worksheet_dir)
+                if not os.path.exists(tex_dir):
+                    os.makedirs(tex_dir)
+                os.system("mv " + filename + ' ' +  tex_dir + '/' + filename)
+                output_pdf = filename.replace('.tex', '.pdf')
+                os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
+            except (OSError, IOError, subprocess.CalledProcessError) as e:
+                print e
 
             self.output_fn_no_answers = worksheet_dir + '/' + output_pdf
+
     def make_line_breaks(self, string, num_char=70):
         '''
         Makes line breaks every num_char characters, returns formatted string.
