@@ -469,7 +469,7 @@ class ProblemContainer:
                 # Generating expression
                 expr = self.gen.gen_numerical_expression(num_terms=num_terms,
                         op=op, types=types, max_lowest_term=max_lowest_term,
-                        max_multiple=max_mulitple, same_base_root=same_base_root)
+                        max_multiple=max_multiple, same_base_root=same_base_root)
                 # Attempting to add it
                 if self.add_problem(backend.Problem(expr)):
                     return
@@ -680,22 +680,22 @@ class Worksheet(ProblemContainer):
         worksheet_file.close()
 
         # Compiling worksheet
+        worksheet_dir = 'worksheets'
+        output_pdf = filename.replace('.tex', '.pdf')
         try:
-            subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
-            # os.system("pdflatex %s" % filename) 
+            #subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
+            os.system("pdflatex %s" % filename) 
             # Cleaning files and organizing
             os.system("rm *.aux *.log")
-            worksheet_dir = 'worksheets'
             tex_dir = 'tex'
             if not os.path.exists(worksheet_dir):
                 os.makedirs(worksheet_dir)
             if not os.path.exists(tex_dir):
                 os.makedirs(tex_dir)
             os.system("mv " + filename + ' ' +  tex_dir + '/' + filename)
-            output_pdf = filename.replace('.tex', '.pdf')
             os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
         except (OSError, IOError, subprocess.CalledProcessError) as e:
-            print e
+            print(e)
             
 
         # Saving worksheet name
@@ -713,8 +713,8 @@ class Worksheet(ProblemContainer):
             worksheet_file.close()
 
             try:
-                subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
-                # os.system("pdflatex %s" % filename) 
+                #subprocess.check_output("pdflatex %s" % filename, stderr=subprocess.STDOUT)
+                os.system("pdflatex %s" % filename) 
                 # Cleaning files and organizing
                 os.system("rm *.aux *.log")
                 worksheet_dir = 'worksheets'
@@ -727,7 +727,7 @@ class Worksheet(ProblemContainer):
                 output_pdf = filename.replace('.tex', '.pdf')
                 os.system("mv " + output_pdf + ' ' +  worksheet_dir + '/' + output_pdf)
             except (OSError, IOError, subprocess.CalledProcessError) as e:
-                print e
+                 print(e)
 
             self.output_fn_no_answers = worksheet_dir + '/' + output_pdf
 
