@@ -161,6 +161,85 @@ class Term:
     def __str__(self):
         return self.str_term
 
+class FracTerm(Term):
+    '''
+    Object inherited from Terms designed to store a fractional term with
+    expressions on the top and bottom (like (x-1)/(x+1)).
+
+    Member variables:
+
+    sympy_term      -   A SymPy expression of the term itself.
+    latex_term      -   A form of the term formatted as latex.
+    str_term        -   A form of the term formatted as a Python string.
+    numerator       -   An expression representing the numerator of the fraction
+    denominator     -   An expression representing the denominator of the fraction
+    expand          -   Determines if any operations between this FracTerm and
+                        another should expand fully.
+    '''
+    def __init__(self, numerator, denominator, expand=True):
+        '''
+        Initializes the FracTerm.
+
+        numerator   -   A Term, Expression, or FracTerm intended to represent the
+                        contents of the numerator. This is internally converted to an
+                        Expression.
+        denominator -   A Term, Expression, or FracTerm intended to represent the
+                        contents of the denominator. This is internally converted to an
+                        Expression.
+        expand      -   Determines if any operations between this FracTerm and
+                        another should expand fully.
+        '''
+        if isinstance(numerator, Term):
+            self.numerator = Expression([numerator], [numerator], [])
+        elif isinstance(numerator, Expression):
+            self.numerator = numerator
+        if isinstance(denominator, Term):
+            self.denominator = Expression([denominator], [denominator], [])
+        elif isinstance(denominator, Expression):
+            self.denominator = denominator
+        self.sympy_term = self.numerator.get_sympy() / self.denominator.get_sympy()
+        self.latex_term = "\\frac{%s}{%s}" % (latex(self.numerator.get_sympy()),
+                latex(self.denominator.get_sympy()))
+        self.str_term = str(self.sympy_term)
+
+    def __add__(self, other):
+        if isinstance(other, FracTerm):
+            new_numerator = self.numerator * other.denominator + \
+                other.numerator * self.denominator
+            new_denominator = self.denominator * other.denominator
+            return FracTerm(new_numerator, new_denominator)
+        elif isinstance(other, Term):
+            return self + FracTerm(other, Term(Rational(1,1)))
+
+    def __sub__(self, other):
+        if isinstance(other, FracTerm):
+            new_numerator = self.numerator * other.denominator - \
+                other.numerator * self.denominator
+            new_denominator = self.denominator * other.denominator
+            return FracTerm(new_numerator, new_denominator)
+        elif isinstance(other, Term):
+            return self - FracTerm(other, Term(Rational(1,1)))
+
+    def __mul__(self, other):
+        if isinstance(other, FracTerm):
+            new_numerator = self.numerator * other.numerator
+            new_denominator = self.denominator * other.denominator
+            return FracTerm(new_numerator, new_denominator)
+        elif isinstance(other, Term):
+            return self * FracTerm(other, Term(Rational(1,1)))
+
+    def __truediv__(self, other):
+        if isinstance(other, FracTerm):
+            new_numerator = self.numerator * other.denomintor
+            new_denominator = self.denominator * other.numerator
+            return FracTerm(new_numerator, new_denominator)
+        elif isinstance(other, Term):
+            return self / FracTerm(other, Term(Rational(1,1)))
+
+    def __pow__(self, other):
+        if isinstance(other, FracTerm) or isinstance(other, Term):
+            return Term(self.sympy_term)^Term(other.sympy_term)
+
 class Expression:
     '''
     Object designed to combine a list of Terms into a single expression.
